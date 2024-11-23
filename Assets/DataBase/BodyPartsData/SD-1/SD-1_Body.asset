@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a8722ce79f3f444fa9c0da536778d28, type: 3}
+  m_Name: SD-1_Body
+  m_EditorClassIdentifier: 
+  ItemNumber: 307
+  Name: "SD-1_\u80F4\u4F53\u90E8"
+  Description: 
+  Type: 1
+  ObjnameMeshPairs:
+    _list:
+    - key: Body_Mesh
+      value: {fileID: -2393547752436505059, guid: 404232a0da6a95a49a32f138f2acdb7f,
+        type: 3}
+  hpFactor: 1000
+  moveSpeed: 0
+  boostSpeed: 0
+  jumpForce: 0
+  riseForce: 1000
+  boostAmout: 10
+  boostRecoverRate: 50
+  maxVel: {x: 0, y: 0, z: 0}
+  boostMaxVel: {x: 0, y: 0, z: 0}
