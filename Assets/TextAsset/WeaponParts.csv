@@ -1,0 +1,7 @@
+番号,アイテムファイル名,アイテム名,説明,武器種類,装備箇所,攻撃種類,値段,装備位置/プレハブ名1,装備位置/プレハブ名2
+501,Pistol01,ピストル01,なし,Gun,Arm,Physicial,0,LeftArm/Pistol01,RightArm/Pistol01
+502,ShoulderRocket01,肩ロケット01,なし,Rocket,Shoulder,Physicial,0,LeftShoulder/ShoulderRocket01Left,RightShoulder/ShoulderRocket01Right
+503,GatlingGun01,ガトリング01,なし,Gun,Arm,Physicial,0,LeftArm/GatlingGun01,RightArm/GatlingGun01
+504,SniperRifle01,スナイパーライフル01,なし,Gun,Arm,Physicial,0,LeftArm/SniperRifle01,RightArm/SniperRifle01
+505,ShotGun01,ショットガン01,なし,Gun,Arm,Physicial,0,LeftArm/ShotGun01,RightArm/ShotGun01
+506,ShoulderCanon,肩キャノン01,なし,Gun,Shoulder,Physicial,0,LeftShoulder/ShoulderCanon01Left,RightShoulder/ShoulderCanon01Right

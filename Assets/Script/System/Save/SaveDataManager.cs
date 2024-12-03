@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
+using System.Text;
 
 public class SaveDataManager : MonoBehaviour
 {
@@ -26,7 +28,8 @@ public class SaveDataManager : MonoBehaviour
     public SaveData saveData;
 
     // データのロードが完了したときに発生するイベント
-    public event Action OnLoadComplete;
+    public event Action onLoadComplete;
+    public event Action onSaveStart,onSaveComplete;
 
     private bool NewGameFlag = true;
     public bool isLoadComplete = false;
@@ -47,6 +50,7 @@ public class SaveDataManager : MonoBehaviour
         {
             NewGameFlag = false;
         }
+
     }
 
     // Start is called before the first frame update
@@ -54,12 +58,19 @@ public class SaveDataManager : MonoBehaviour
     {
         await AsyncLoadSaveData();
 
+        //オートセーブのUIのメソッドをデリゲートに登録
+        AutoSaveUI autoSaveUI = FindObjectOfType<AutoSaveUI>();
+
+        if (autoSaveUI != null) 
+        {
+            onSaveStart += autoSaveUI.StartSavingText;
+            onSaveComplete += autoSaveUI.CompleteSavingText;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        
     }
 
     public async UniTask AsyncLoadSaveData()
@@ -83,7 +94,7 @@ public class SaveDataManager : MonoBehaviour
         isLoadComplete = true;
 
         // データのロードが完了したことを通知
-        OnLoadComplete?.Invoke();
+        onLoadComplete?.Invoke();
     }
 
     public void SaveFileWrite()
@@ -125,6 +136,64 @@ public class SaveDataManager : MonoBehaviour
             fs.Write(jsonData);
         }
     }
+
+    public async UniTask SaveFileWriteAsync()
+    {
+        onSaveStart?.Invoke();
+
+        await UniTask.Delay(1000);
+
+        string saveFolder = Application.persistentDataPath + "/SaveData";
+        string savePath = saveFolder + "/SaveData.sav";
+
+        // セーブフォルダが存在しない場合は作成
+        if (!Directory.Exists(saveFolder))
+        {
+            Directory.CreateDirectory(saveFolder);
+        }
+
+        // JSONデータのシリアライズ
+        string jsonData = "";
+        var settings = new JsonSerializerSettings
+        {
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+        };
+
+        try
+        {
+            jsonData = JsonConvert.SerializeObject(saveData, settings);
+            Debug.Log("Serialized Save Data: " + jsonData);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Serialization failed: {ex.Message}");
+            return;
+        }
+
+        //シリアライズ後非同期でファイル書き込み
+        try
+        {
+            await WriteToFileAsync(savePath,jsonData);
+
+            Debug.Log("Save completed!");
+
+            onSaveComplete?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"File write failed: {ex.Message}");
+        }
+    }
+
+    //ファイル書き込み処理
+    private async UniTask WriteToFileAsync(string filePath, string data)
+    {
+        await using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
+        {
+            writer.Write(data);
+        }
+    }
+
 
     public SaveData SaveFileRead()
     {

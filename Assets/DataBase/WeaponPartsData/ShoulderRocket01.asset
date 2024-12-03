@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: ShoulderRocket01
   m_EditorClassIdentifier: 
   ItemNumber: 502
-  price: 100
-  Name: "\u8FFD\u5C3E\u30E9\u30F3\u30C1\u30E3\u30FC"
-  Description: 
+  price: 0
+  itemName: "\u80A9\u30ED\u30B1\u30C3\u30C801"
+  Description: "\u306A\u3057"
   setType: 0
   weaponType: 1
   attackType: 0

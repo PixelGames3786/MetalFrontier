@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a8722ce79f3f444fa9c0da536778d28, type: 3}
+  m_Name: SNP-E02_Arm_R
+  m_EditorClassIdentifier: 
+  ItemNumber: 324
+  price: 0
+  itemName: "SNP-E02 \u53F3\u8155\u90E8"
+  Description: "\u306A\u3057"
+  Type: 4
+  ObjnameMeshPairs:
+    _list:
+    - key: Hips_Mesh
+      value: {fileID: 5423507823662825503, guid: d48e6049053c4184d8d33224e8985cf0,
+        type: 3}
+    - key: UpperLeg_L_Mesh
+      value: {fileID: -4462490496568913832, guid: 422704d041800d54f90fbcf4d41a00f4,
+        type: 3}
+    - key: LowerLeg_L_Mesh
+      value: {fileID: 3363573422548942696, guid: 4d65e10205d7ee449a7de940930bf8a7,
+        type: 3}
+    - key: UpperLeg_R_Mesh
+      value: {fileID: 8487710163846300527, guid: 036513ba7a21d954fa81decd9cff3c28,
+        type: 3}
+    - key: LowerLeg_R_Mesh
+      value: {fileID: -4939872482838755044, guid: 8d0a23c0a6dbeb143af8ee2712e5e2a4,
+        type: 3}
+  hpFactor: 0
+  moveSpeed: 0
+  boostSpeed: 450
+  jumpForce: 0
+  riseForce: 0
+  shotAccuracy: 1
+  boostAmout: 0
+  boostUseRate: 0
+  boostRecoverRate: 0
+  physicalRes: 0
+  beamRes: 0
+  maxVel: {x: 2, y: 2, z: 2}
+  boostMaxVel: {x: 4.5, y: 4.5, z: 4.5}

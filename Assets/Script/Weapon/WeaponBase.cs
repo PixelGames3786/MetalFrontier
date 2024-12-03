@@ -17,5 +17,7 @@ public abstract class WeaponBase : MonoBehaviour
 
     public Action<LegacySettingData.WeaponSetPosi> OnStartInterval,OnEndInterval;
 
+    public RobotController controller;
+
     public abstract void Use(Transform target=null);
 }

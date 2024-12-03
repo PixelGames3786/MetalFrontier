@@ -69,12 +69,19 @@ public class SaveData
     {
         settingData = new LegacySettingData();
 
-        missionNumList.Add(0);
+        missionNumList.Add(1);
 
         //TODO デバッグ用に最初にぱーつをいくつか手に入れる
         AddItemRange(new List<int> { 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 501, 502,506 });
 
         shopGoodsNumList.Add(501);
+        shopGoodsNumList.Add(502);
+        shopGoodsNumList.Add(502);
+        shopGoodsNumList.Add(502);
+        shopGoodsNumList.Add(502);
+        shopGoodsNumList.Add(502);
+        shopGoodsNumList.Add(502);
+        shopGoodsNumList.Add(502);
         shopGoodsNumList.Add(502);
         shopGoodsNumList.Add(301);
 
@@ -84,7 +91,7 @@ public class SaveData
         settingData.SetBodyParts(PartsType.RightArm, AddItem(304));
         settingData.SetBodyParts(PartsType.Leg, AddItem(305));
 
-        settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.LeftArm, null);
+        settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.LeftArm, WeaponsDataList[0]);
         settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.RightArm, null);
         settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.LeftShoulder, null);
         settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.RightShoulder, null);

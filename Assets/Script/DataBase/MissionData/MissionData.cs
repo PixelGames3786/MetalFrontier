@@ -14,6 +14,9 @@ public class MissionData : ScriptableObject
     [TextArea]
     public string description;
 
+    [TextArea]
+    public string target;
+
     //‘I‘ğ‚³‚ê‚½‚Æ‚«‚É‘JˆÚ‚·‚éƒV[ƒ“–¼
     public string sceneName;
 

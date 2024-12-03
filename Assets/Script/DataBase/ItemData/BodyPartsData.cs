@@ -19,7 +19,7 @@ public class BodyPartsData : ItemData
 
 
     //1つのパーツに複数のメッシュが含まれる場合があるため
-    public SerializableDictionary<string,Mesh> ObjnameMeshPairs= new SerializableDictionary<string,Mesh>();
+    public SerializableDictionary<string,Mesh> ObjnameMeshPairs=new SerializableDictionary<string, Mesh>();
 
     //パラメータ
     public float hpFactor;

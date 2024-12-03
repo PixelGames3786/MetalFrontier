@@ -23,7 +23,7 @@ public class RobotController : MonoBehaviour
 
     public LineRenderer lineRenderer;
 
-    public Animator ArmatureAnimator;
+    public Animator armatureAnimator;
 
     //姿勢制御系
     [SerializeField]
@@ -82,6 +82,8 @@ public class RobotController : MonoBehaviour
     {
         if (!canOperate) return; //操作不能状態ならば行わない
 
+        status = statusControl.nowStatus;
+
         //向いている方向に基づいて移動ベクトルを計算
         moveDirection = (transform.forward * moveInput.y) + (transform.right * moveInput.x).normalized;
 
@@ -91,6 +93,16 @@ public class RobotController : MonoBehaviour
             //ターゲットの方を向く
             CustomLookAtYAxis(target);
             //transform.LookAt(Target.position);
+        }
+
+        //覚醒中ならば徐々に覚醒量を減らしてく
+        if (isAwakening)
+        {
+            statusControl.QuorraUse(Time.deltaTime*status.quorraUseRate);
+        }
+        else
+        {
+            statusControl.QuorraRecover(Time.deltaTime*status.quorraRecoverRate);
         }
     }
 
@@ -169,13 +181,13 @@ public class RobotController : MonoBehaviour
         {
             rb.drag = dragValue;  //ドラッグを適用して減速
 
-            ArmatureAnimator.SetBool("IsMoving", false);
+            armatureAnimator.SetBool("IsMoving", false);
         }
         else
         {
             rb.drag = 0;  //入力があるときはドラッグをオフにする
 
-            ArmatureAnimator.SetBool("IsMoving", true);
+            armatureAnimator.SetBool("IsMoving", true);
 
         }
 
@@ -211,8 +223,20 @@ public class RobotController : MonoBehaviour
     {
         moveInput = input;
 
-        ArmatureAnimator.SetFloat("Move_h", moveInput.x);
-        ArmatureAnimator.SetFloat("Move_v", moveInput.y);
+        armatureAnimator.SetFloat("Move_h", moveInput.x);
+        armatureAnimator.SetFloat("Move_v", moveInput.y);
+    }
+
+    //死亡時処理
+    public void Die()
+    {
+        armatureAnimator.SetBool("IsDied",true);
+
+        GetComponent<CapsuleCollider>().radius = 1.8f;
+
+        rb.constraints = RigidbodyConstraints.None;
+
+        rb.AddTorque(transform.forward*-1f * 500f,ForceMode.VelocityChange); //死亡時に後ろに倒れる
     }
 
     //左手武器射撃
@@ -271,16 +295,31 @@ public class RobotController : MonoBehaviour
         }
     }
 
-    //覚醒状態に入る
-    public void RobotStartAwake()
+    //覚醒状態変更
+    public void AwakeChange()
     {
-        isAwakening = true;
+        if (isAwakening)
+        {
+            AwakeEnd();
+        }
+        else
+        {
+            AwakeStart();
+        }
+    }
+
+    //覚醒状態に入る
+    public void AwakeEnd()
+    {
+        isAwakening = false;
+        statusControl.EndAwake();
     }
 
     //覚醒状態から出る
-    public void RobotEndAwake()
+    public void AwakeStart()
     {
-        isAwakening = false;
+        isAwakening = true;
+        statusControl.StartAwake();
     }
 
     //ブースト開始
@@ -292,7 +331,7 @@ public class RobotController : MonoBehaviour
 
         isBoosting = true;
 
-        ArmatureAnimator.SetBool("IsBoosting", true);
+        armatureAnimator.SetBool("IsBoosting", true);
     }
 
     //ブースト終了
@@ -302,7 +341,7 @@ public class RobotController : MonoBehaviour
 
         isBoosting = false;
 
-        ArmatureAnimator.SetBool("IsBoosting", false);
+        armatureAnimator.SetBool("IsBoosting", false);
     }
 
     //ジャンプ
@@ -315,7 +354,7 @@ public class RobotController : MonoBehaviour
             canJump = false;
             isInAir = true;
 
-            ArmatureAnimator.SetBool("IsInAir",true);
+            armatureAnimator.SetBool("IsInAir",true);
         }
     }
 
@@ -372,7 +411,7 @@ public class RobotController : MonoBehaviour
             canJump = true;
             isInAir = false;
 
-            ArmatureAnimator.SetBool("IsInAir", false);
+            armatureAnimator.SetBool("IsInAir", false);
         }
     }
 

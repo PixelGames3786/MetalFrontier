@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class WeaponPartsSimpleInfo : MonoBehaviour
+public class WeaponPartsSimpleInfo : SimpleInfoBase
 {
     private HavingItem haveItemData;
     private WeaponPartsData PartsData;
@@ -29,7 +29,7 @@ public class WeaponPartsSimpleInfo : MonoBehaviour
         PartsData = itemData;
         haveItemData = having;
 
-        PartsNameText.text = PartsData.Name;
+        PartsNameText.text = PartsData.itemName;
     }
 
     public void OnClick()

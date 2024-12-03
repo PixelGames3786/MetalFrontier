@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using UnityEngine;
 
@@ -30,8 +31,12 @@ public class LegacySpecStatus //動かす際のステータス　
     public float beamRes;
 
     //最大速度　通常移動時とブースト時
+    [JsonIgnore]
     public Vector3 maxVel, boostMaxVel;
 
     //最大覚醒量
-    public float quorraAmount;
+    public float quorraAmount=400;
+
+    public float quorraUseRate=4;
+    public float quorraRecoverRate=2;
 }

@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a8722ce79f3f444fa9c0da536778d28, type: 3}
+  m_Name: SD-1_Arm_L
+  m_EditorClassIdentifier: 
+  ItemNumber: 308
+  price: 0
+  itemName: "SD-1 \u5DE6\u8155\u90E8"
+  Description: "\u306A\u3057"
+  Type: 2
+  ObjnameMeshPairs:
+    _list:
+    - key: UpperArm_L_Mesh
+      value: {fileID: 7039168336541149424, guid: 805ba81c94a9ea245a6ad0c741607fe9,
+        type: 3}
+    - key: LowerArm_L_Mesh
+      value: {fileID: -6553453923336596848, guid: 8bceb94cf149df9409562a1218546b34,
+        type: 3}
+  hpFactor: 0
+  moveSpeed: 50
+  boostSpeed: 600
+  jumpForce: 0
+  riseForce: 0
+  shotAccuracy: 0
+  boostAmout: 0
+  boostUseRate: 0
+  boostRecoverRate: 0
+  physicalRes: 0
+  beamRes: 0
+  maxVel: {x: 3, y: 3, z: 3}
+  boostMaxVel: {x: 6, y: 6, z: 6}

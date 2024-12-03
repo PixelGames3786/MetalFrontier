@@ -14,7 +14,7 @@ public class WeaponPartsData : ItemData
 
     public enum WeaponType
     {
-        Pistol,
+        Gun,
         Rocket,
     }
 

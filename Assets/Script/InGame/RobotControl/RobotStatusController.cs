@@ -8,13 +8,13 @@ public class RobotStatusController : MonoBehaviour
 {
     public RobotController robotControl { get; private set; }
 
-    public LegacySpecStatus normalStatus { get; private set; }
-    public LegacySpecStatus awakeStatus { get; private set; }
+    private LegacySpecStatus normalStatus = new LegacySpecStatus();
+    private LegacySpecStatus awakeStatus = new LegacySpecStatus();
 
     public LegacySpecStatus nowStatus=new LegacySpecStatus();
 
     //デリゲート類の定義
-    public event Action<float> OnHPChanged,OnBoostChanged;
+    public event Action<float> OnHPChanged,OnBoostChanged,OnQuorraChanged;
 
     //変動するステータス類　実HPとか　ブースト残量など
     public float hp;
@@ -74,6 +74,33 @@ public class RobotStatusController : MonoBehaviour
         OnBoostChanged?.Invoke(nowStatus.boostAmount - usedBoost);
     }
 
+    //使用済み覚醒量を増やす
+    public void QuorraUse(float useVal)
+    {
+        usedQuorra += useVal;
+
+        //最後まで使用すると覚醒解除
+        if (usedBoost >= nowStatus.quorraAmount)
+        {
+            robotControl.AwakeEnd();
+        }
+
+        OnQuorraChanged?.Invoke(nowStatus.quorraAmount - usedQuorra);
+    }
+
+    //使用済み覚醒量を減らす
+    public void QuorraRecover(float recoverVal)
+    {
+        usedQuorra -= recoverVal;
+
+        if (usedQuorra <= 0)
+        {
+            usedQuorra = 0;
+        }
+
+        OnQuorraChanged?.Invoke(nowStatus.quorraAmount - usedQuorra);
+    }
+
     //HPを変動させる
     public void HPChange(float changeVal)
     {
@@ -87,12 +114,12 @@ public class RobotStatusController : MonoBehaviour
     //覚醒状態に入る　ステータスを切り替える
     public void StartAwake()
     {
-
+        nowStatus = awakeStatus;
     }
 
     public void EndAwake()
     {
-
+        nowStatus = normalStatus;
     }
 
     //ターゲット設定
@@ -110,7 +137,6 @@ public class RobotStatusController : MonoBehaviour
         }
 
     }
-
 
 
     //装備パーツからステータスを算出
@@ -145,12 +171,18 @@ public class RobotStatusController : MonoBehaviour
         string json = JsonConvert.SerializeObject(normalStatus);
         awakeStatus = JsonConvert.DeserializeObject<LegacySpecStatus>(json);
 
-
+        awakeStatus.moveSpeed=normalStatus.moveSpeed*awakeFactor;
+        awakeStatus.boostSpeed=normalStatus.boostSpeed*awakeFactor;
+        awakeStatus.jumpForce=normalStatus.jumpForce*awakeFactor;
+        awakeStatus.riseForce=normalStatus.riseForce*awakeFactor;
+        awakeStatus.maxVel=normalStatus.maxVel*awakeFactor;
+        awakeStatus.boostMaxVel=normalStatus.boostMaxVel*awakeFactor;
 
         nowStatus = normalStatus;
 
         //ステータス計算後
         hp = normalStatus.maxHP;
+        usedQuorra = normalStatus.quorraAmount;
     }
 }
 

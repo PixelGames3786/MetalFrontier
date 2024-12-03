@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ItemNumber: 501
   price: 0
-  Name: "\u30D4\u30B9\u30C8\u30EB1"
-  Description: "\u8AAC\u660E\u30C6\u30B9\u30C8\n\u3042\u3042\n\u3042\u3042\u3042\n\u3046\u3046"
+  itemName: "\u30D4\u30B9\u30C8\u30EB01"
+  Description: "\u306A\u3057"
   setType: 1
   weaponType: 0
   attackType: 0

@@ -112,6 +112,8 @@ public class CustomRobotController : MonoBehaviour
 
             createdWeaponsObj[keyValue.Key] = Instantiate(weaponPrefab,weaponParent).transform;
             createdWeaponsObj[keyValue.Key].name= weaponPrefab.name;
+
+            createdWeaponsObj[keyValue.Key].RecursiveSetLayer(LayerMask.NameToLayer("CustomizeRobot"));
         }
 
     }

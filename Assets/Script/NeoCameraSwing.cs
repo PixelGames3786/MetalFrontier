@@ -37,7 +37,7 @@ public class CameraSwing : MonoBehaviour
     private void Awake()
     {
         //InputSystemƒŠƒZƒbƒg
-        TestControls testControl= new TestControls();
+        InputControls testControl= new InputControls();
 
         resetAction = testControl.Player.CameraReset;
 

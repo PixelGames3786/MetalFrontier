@@ -62,7 +62,11 @@ MonoBehaviour:
     beamRes: 0
     maxVel: {x: 0, y: 0, z: 0}
     boostMaxVel: {x: 0, y: 0, z: 0}
+    quorraAmount: 400
+    quorraUseRate: 4
+    quorraRecoverRate: 2
   weaponPosition: 0
+  controller: {fileID: 0}
   BulletPrefab: {fileID: 4779404370962800624, guid: 906bdac905e2bf144b9f63616de609fa,
     type: 3}
   ShotPosi: {fileID: 6664762421485482750}
@@ -170,7 +174,7 @@ MeshCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5

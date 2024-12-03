@@ -47,7 +47,7 @@ public class EnemyControlTest : MonoBehaviour,IDamageable,ITargetable
         //全メッシュを取得
         allMeshes = GetComponentsInChildren<MeshRenderer>();
 
-        SaveDataManager.instance.OnLoadComplete += LegacySetUp;
+        SaveDataManager.instance.onLoadComplete += LegacySetUp;
     }
 
     // Update is called once per frame
@@ -97,12 +97,14 @@ public class EnemyControlTest : MonoBehaviour,IDamageable,ITargetable
         //死亡処理
         if (controller.statusControl.hp <= 0)
         {
-            Die();
+            //Die();
         }
     }
 
     public void Damage(AttackData attack)
     {
+        if (isDied) return;
+
         //攻撃タイプと耐性を考慮してダメージを決定
         float damage = attack.damage;
 
@@ -144,8 +146,41 @@ public class EnemyControlTest : MonoBehaviour,IDamageable,ITargetable
         //デリゲートの呼び出し
         OnDeathWithName?.Invoke(gameObject.name);
 
+        controller.Die();
+
         //数秒後に破壊
-        Destroy(gameObject,5f);
+        //Destroy(gameObject,5f);
+
+        Invoke("ChangeHackSlashSource", 10f);
+    }
+
+    //死亡時少し経つとstaticを設定し動かなくなる
+    private void ChangeHackSlashSource()
+    {
+        GetComponent<Rigidbody>().isKinematic = true;
+        GetComponent<Collider>().isTrigger = true;
+
+        GameObject sourcePrefab= (GameObject)Resources.Load("Prefabs/HackSlashSource");
+
+        HackSlashSource source= Instantiate(sourcePrefab,transform).GetComponent<HackSlashSource>();
+
+        source.SourceSetUp(EquipedItemList());
+    }
+
+
+    //現在装備しているアイテムを体武器問わず返す
+    public List<ItemData> EquipedItemList()
+    {
+        List<ItemData> returnList = new List<ItemData>();
+
+        returnList.AddRange(bodyPartsDatas);
+
+        foreach (var keyValue in weaponPartsDic)
+        {
+            returnList.Add(keyValue.Value);
+        }
+
+        return returnList;
     }
 
 

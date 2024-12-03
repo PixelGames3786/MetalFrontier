@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 using DG.Tweening;
 using TMPro;
 using Cysharp.Threading.Tasks;
+using static CustomizeControlState;
 
 public class ShopUIController : MonoBehaviour
 {
@@ -70,8 +71,7 @@ public class ShopUIController : MonoBehaviour
 
             uiController.colText.text = SaveDataManager.instance.saveData.haveCol+" Col";
 
-            uiController.gameObject.SetActive(true);
-            uiController.GetComponent<CanvasGroup>().DOFade(1f,0.5f);
+            uiController.GetComponent<CanvasGroup>().DOFade(1f,0.4f);
         }
 
         public override void OnExit()
@@ -131,19 +131,22 @@ public class ShopUIController : MonoBehaviour
                     break;
             }
 
+            uiController.StateTranstion(ShopState.SelectBuyGoods);
+
             uiController.goodsScrollView.InitializeScrollView(goods);
             uiController.goodsScrollView.OpenScrollView();
 
-            uiController.StateTranstion(ShopState.SelectBuyGoods);
         }
 
         public void CanselAction(InputAction.CallbackContext context)
         {
-            uiController.GetComponent<CanvasGroup>().DOFade(0f, 0.5f).OnComplete(() => 
-            {
-                uiController.gameObject.SetActive(false);
-                uiController.StateTranstion(ShopState.Wait);
-            });
+            uiController.GetComponent<CanvasGroup>().DOFade(0f, 0.4f);
+
+            FindObjectOfType<MainMenuUIController>().StateTranstion(MainMenuState.MainMenuStateEnum.SelectMenu);
+            uiController.StateTranstion(ShopState.Wait);
+
+            //オートセーブ
+            SaveDataManager.instance.SaveFileWriteAsync();
         }
 
     }
@@ -254,7 +257,7 @@ public class ShopUIController : MonoBehaviour
             //お金が足りていたら
             if (SaveDataManager.instance.saveData.haveCol>=purchaseGoods.price)
             {
-                uiController.purchaseCheck.InitializeUI(uiController.goodsScrollView.forcusInfo.goodsData);
+                uiController.purchaseCheck.InitializeShopUI(uiController.goodsScrollView.forcusInfo.goodsData);
                 uiController.purchaseCheck.OpenWindow();
             }
             else
@@ -290,7 +293,7 @@ public class ShopUIController : MonoBehaviour
             if (SaveDataManager.instance.saveData.haveCol >= purchaseGoods.price)
             {
                 //Yesを選択していたらお金を払いアイテムを手に入れる
-                if (uiController.purchaseCheck.isPurchase)
+                if (uiController.purchaseCheck.isConfirm)
                 {
                     SaveDataManager.instance.saveData.ColChange(-purchaseGoods.price);
 
@@ -316,10 +319,11 @@ public class ShopUIController : MonoBehaviour
     private ShopControllerState nowState;
 
     public RectTransform selectArrowRect;
+    public CanvasGroup thisGroup;
 
     public ShopGoodsScrollView goodsScrollView;
     public ShopGoodsStatusUI goodsStatus;
-    public PurchaseCheckUI purchaseCheck;
+    public ConfirmCheckUI purchaseCheck;
     public PurchaseErrorUI purchaseError;
 
     public TextMeshProUGUI colText;
@@ -330,7 +334,7 @@ public class ShopUIController : MonoBehaviour
     void Start()
     {
         //Actionのセットアップ
-        TestControls testControl = new TestControls();
+        InputControls testControl = new InputControls();
 
         upArrowAct = testControl.UI.UpArrow;
         downArrowAct = testControl.UI.DownArrow;
@@ -354,8 +358,6 @@ public class ShopUIController : MonoBehaviour
         nowState = States[0];
 
         nowState.OnEnter();
-
-        gameObject.SetActive(false);
     }
 
     // Update is called once per frame

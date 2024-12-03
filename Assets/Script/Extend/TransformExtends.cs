@@ -36,4 +36,19 @@ public static class TransformExtends
         // 見つからない場合はnullを返す
         return null;
     }
+
+    //子オブジェクトのレイヤーを全て変更
+    public static void RecursiveSetLayer(this Transform target, int layer)
+    {
+        // 対象オブジェクトの子オブジェクトをチェックする
+        foreach (Transform child in target)
+        {
+            // 子オブジェクトのレイヤーを切り替える
+            GameObject childObject = child.gameObject;
+            childObject.layer = layer;
+
+            // 再帰的に全ての子オブジェクトを処理する
+            RecursiveSetLayer(childObject.transform, layer);
+        }
+    }
 }

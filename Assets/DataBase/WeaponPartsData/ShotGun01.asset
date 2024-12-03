@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ItemNumber: 505
   price: 0
-  Name: "\u30D4\u30B9\u30C8\u30EB1"
-  Description: 
+  itemName: "\u30B7\u30E7\u30C3\u30C8\u30AC\u30F301"
+  Description: "\u306A\u3057"
   setType: 1
   weaponType: 0
   attackType: 0
   setPosiWithPrefab:
     _list:
     - key: 0
-      value: {fileID: 2989813999663587875, guid: 5a67ba13f64207d4995628a74bc0ddee,
+      value: {fileID: 2989813999663587875, guid: 05b79d39302c63f45b85b8ebec9447f4,
         type: 3}
     - key: 1
-      value: {fileID: 2989813999663587875, guid: 5a67ba13f64207d4995628a74bc0ddee,
+      value: {fileID: 2989813999663587875, guid: 05b79d39302c63f45b85b8ebec9447f4,
         type: 3}

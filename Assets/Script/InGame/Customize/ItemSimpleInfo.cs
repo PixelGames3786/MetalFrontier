@@ -29,7 +29,7 @@ public class ItemSimpleInfo : MonoBehaviour
         partsData = itemData;
         haveItemData=having;
 
-        PartsNameText.text = partsData.Name;
+        PartsNameText.text = partsData.itemName;
     }
 
     public void OnClick()

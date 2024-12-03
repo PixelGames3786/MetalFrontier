@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+    "com.unity.2d.sprite": "1.0.0",
+    "com.unity.2d.tilemap": "1.0.0",
     "com.unity.cinemachine": "2.10.1",
     "com.unity.collab-proxy": "2.5.1",
     "com.unity.ide.rider": "3.0.31",
@@ -15,7 +17,6 @@
     "com.unity.toonshader": "0.10.2-preview",
     "com.unity.ugui": "1.0.0",
     "com.unity.visualscripting": "1.9.4",
-    "dev.omusubi.objectrenamer": "https://github.com/omsb/ObjectRenamer.git?path=Assets/ObjectRenamer",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",

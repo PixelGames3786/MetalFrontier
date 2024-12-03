@@ -22,7 +22,7 @@ public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>,ISe
     }
 
     [SerializeField]
-    private List<Pair> _list = null;
+    private List<Pair> _list = new List<Pair>();
 
     /// <summary>
     /// OnAfterDeserialize
@@ -45,6 +45,10 @@ public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>,ISe
     /// </summary>
     void ISerializationCallbackReceiver.OnBeforeSerialize()
     {
-        // èàóùÇ»Çµ
+        _list.Clear();
+        foreach (KeyValuePair<TKey, TValue> kvp in this)
+        {
+            _list.Add(new Pair(kvp.Key, kvp.Value));
+        }
     }
 }

@@ -41,7 +41,7 @@ public class RobotArmatureTest : MonoBehaviour
 
     public CameraSwing cameraSwing;
 
-    private TestControls testControl;
+    private InputControls testControl;
 
     // 2²“ü—Í‚ğó‚¯æ‚é‘z’è‚ÌAction
     private InputAction moveAction, LeftArmShotAct,RightArmShotAct, boostAct, JumpAct,RiseAct;
@@ -54,7 +54,7 @@ public class RobotArmatureTest : MonoBehaviour
 
     private void Awake()
     {
-        testControl = new TestControls();
+        testControl = new InputControls();
 
         // InputActions‚Ìİ’è‚ğæ“¾
         moveAction = testControl.Player.Move;

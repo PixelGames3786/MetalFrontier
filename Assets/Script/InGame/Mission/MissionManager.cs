@@ -13,6 +13,7 @@ using static MissionState;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using UnityEngine.InputSystem;
+using static ShopControllerState;
 
 public class MissionManager : MonoBehaviour
 {
@@ -46,7 +47,7 @@ public class MissionManager : MonoBehaviour
             else
             {
                 //終わるまで待つ
-                SaveDataManager.instance.OnLoadComplete += MissionSetUp;
+                SaveDataManager.instance.onLoadComplete += MissionSetUp;
             }
         }
 
@@ -93,6 +94,8 @@ public class MissionManager : MonoBehaviour
 
     public class InMissionState : MissionState
     {
+        private bool isPaused = false;
+
         //コンストラクタ　初期化
         public InMissionState(MissionManager manager)
         {
@@ -112,8 +115,176 @@ public class MissionManager : MonoBehaviour
         //ステートに入った際に、セットアップを行う
         public override void OnEnter()
         {
+            missionManager.menuAction.performed += OpenMenu;
+        }
+
+        public override void OnExit()
+        {
+            missionManager.menuAction.performed -= OpenMenu;
+        }
+
+        private void OpenMenu(InputAction.CallbackContext context)
+        {
+            Time.timeScale = 0;
+
+            Animator[] animators = FindObjectsOfType<Animator>();
+
+            foreach (var animator in animators)
+            {
+                animator.enabled = false;
+            }
+
+            missionManager.menuGroup.gameObject.SetActive(true);
+            missionManager.menuGroup.DOFade(1f, 0.5f).SetUpdate(true).OnComplete(() => 
+            {
+                missionManager.StateTranstion(MissionStateEnum.Menu);
+            });
 
         }
+    }
+
+    public class MenuState : MissionState
+    {
+        private enum MenuOptions
+        {
+            Continue,
+            Drop,
+        }
+
+        private float arrowDefaultYPosi;
+
+        private int nowSelectNum = 0;
+        private int maxSelectNum = 1;
+
+        private InputAction upArrowAct, downArrowAct, confirmAct;
+
+        //コンストラクタ　初期化
+        public MenuState(MissionManager manager)
+        {
+            State = MissionStateEnum.Menu;
+
+            missionManager = manager;
+
+            actionDic = new Dictionary<string, Action>()
+            {
+            };
+
+            actionDicWithArg = new Dictionary<string, Action<object[]>>()
+            {
+            };
+
+            //Actionのセットアップ
+            InputControls testControl = new InputControls();
+
+            upArrowAct = testControl.UI.UpArrow;
+            downArrowAct = testControl.UI.DownArrow;
+            confirmAct = testControl.UI.Confirm;
+
+            upArrowAct.performed += UpArrowAction;
+            downArrowAct.performed += DownArrowAction;
+            confirmAct.performed += ConfirmAction;
+
+            arrowDefaultYPosi = missionManager.menuSelectArrow.localPosition.y;
+
+        }
+
+        //ステートに入った際に、セットアップを行う
+        public override void OnEnter()
+        {
+            upArrowAct.Enable();
+            downArrowAct.Enable();
+            confirmAct.Enable();
+
+        }
+
+        public override void OnExit()
+        {
+            upArrowAct.Disable();
+            downArrowAct.Disable();
+            confirmAct.Disable();
+        }
+
+        public void UpArrowAction(InputAction.CallbackContext context)
+        {
+            nowSelectNum--;
+
+            nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
+
+            Vector2 arrowPosi = missionManager.menuSelectArrow.localPosition;
+            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
+
+            missionManager.menuSelectArrow.localPosition = arrowPosi;
+        }
+
+        public void DownArrowAction(InputAction.CallbackContext context)
+        {
+            nowSelectNum++;
+
+            nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
+
+            Vector2 arrowPosi = missionManager.menuSelectArrow.localPosition;
+            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
+
+            missionManager.menuSelectArrow.localPosition = arrowPosi;
+        }
+
+        public void ConfirmAction(InputAction.CallbackContext context)
+        {
+            //現在選択している種類の商品のスクロールビューを表示する
+            MenuOptions option = (MenuOptions)nowSelectNum;
+
+            switch (option)
+            {
+                case MenuOptions.Continue:
+
+                    BackToMission();
+
+                    break;
+
+                case MenuOptions.Drop:
+
+                    MissionFail();
+
+                    break;
+            }
+        }
+
+        private void BackToMission()
+        {
+            missionManager.menuGroup.DOFade(0f, 0.5f).SetUpdate(true).OnComplete(() =>
+            {
+                missionManager.menuGroup.gameObject.SetActive(false);
+                Time.timeScale = 1;
+
+                Animator[] animators = FindObjectsOfType<Animator>();
+
+                foreach (var animator in animators)
+                {
+                    animator.enabled = true;
+                }
+
+                missionManager.StateTranstion(MissionStateEnum.InMission);
+            });
+        }
+
+        private void MissionFail()
+        {
+            missionManager.menuGroup.DOFade(0f, 0.5f).SetUpdate(true).OnComplete(() =>
+            {
+                missionManager.menuGroup.gameObject.SetActive(false);
+                Time.timeScale = 1;
+
+                Animator[] animators = FindObjectsOfType<Animator>();
+
+                foreach (var animator in animators)
+                {
+                    animator.enabled = true;
+                }
+
+                missionManager.MissionFail();
+            });
+        }
+
     }
 
     public class WaitForReturnState : MissionState
@@ -148,7 +319,7 @@ public class MissionManager : MonoBehaviour
         public override void OnEnter()
         {
             //Actionセットアップ
-            TestControls testControl = new TestControls();
+            InputControls testControl = new InputControls();
             BackAction = testControl.Mission.BackToBase;
             BackAction.performed += BackButtonPress;
             BackAction.Enable();
@@ -227,16 +398,27 @@ public class MissionManager : MonoBehaviour
 
     public MissionResultManager resultManager;
 
+    public InputAction menuAction;
+    public CanvasGroup menuGroup;
+    public RectTransform menuSelectArrow;
+
 
     // Start is called before the first frame update
     void Start()
     {
         condition=GetComponent<MissionCondition>();
 
+        //InputActionを登録
+        InputControls control = new InputControls();
+
+        menuAction = control.Mission.Menu;
+        menuAction.Enable();
+
         //ステートに追加
         states.Add(new CountDownState(this));
         states.Add(new InMissionState(this));
         states.Add(new WaitForReturnState(this));
+        states.Add(new MenuState(this));
 
         nowState = states[0];
 
@@ -339,8 +521,7 @@ public abstract class MissionState : IState
         CountDown, //ミッション開始までのカウントダウン
         InMission, //ミッション中
         WaitForReturn, //ミッション終了後　帰還待ち状態
-        Clear, //ミッションクリア
-        Fail, //ミッション失敗
+        Menu,
     }
 
     public MissionStateEnum State;

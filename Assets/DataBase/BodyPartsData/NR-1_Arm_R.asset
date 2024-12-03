@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a8722ce79f3f444fa9c0da536778d28, type: 3}
+  m_Name: NR-1_Arm_R
+  m_EditorClassIdentifier: 
+  ItemNumber: 304
+  price: 0
+  itemName: "NR-1 \u53F3\u8155\u90E8"
+  Description: "\u306A\u3057"
+  Type: 3
+  ObjnameMeshPairs:
+    _list:
+    - key: UpperArm_R_Mesh
+      value: {fileID: -6089237866501719766, guid: fa9a26d7531ed4c4b8d7b215909a8293,
+        type: 3}
+    - key: LowerArm_R_Mesh
+      value: {fileID: -442443204515950083, guid: cf953272cc5e14e408f8fab795384800,
+        type: 3}
+  hpFactor: 100
+  moveSpeed: 0
+  boostSpeed: 500
+  jumpForce: 0
+  riseForce: 0
+  shotAccuracy: 0
+  boostAmout: 0
+  boostUseRate: 0
+  boostRecoverRate: 0
+  physicalRes: 0
+  beamRes: 0
+  maxVel: {x: 2, y: 2, z: 2}
+  boostMaxVel: {x: 4.5, y: 4.5, z: 4.5}

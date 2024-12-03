@@ -23,9 +23,9 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     private PlayerUIController uiController;
 
     // 2軸入力を受け取る想定のAction
-    private InputAction moveAction, LArmShotAct, RArmShotAct, boostAct, jumpAct, riseAct,camResetAct,LShoulderAct,RShoulderAct;
-    private InputAction LArmLongAct, RArmLongAct, LShoulderLongAct, RShoulderLongAct; //各武器位置の長押しを検知するAction
-
+    private InputAction moveAction; 
+    
+    //各武器位置の長押しを検知するAction
     private Dictionary<InputAction, Action<InputAction.CallbackContext>> actionMap; //InputActionと対応する関数を入れる辞書 1か0のActionのみ
     private Dictionary<InputAction, Action<InputAction.CallbackContext>> canselActionMap;
 
@@ -60,6 +60,9 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     private int maxOutOfAreaCount=20,outOfAreaCount;
     private Coroutine countdownCoroutine; // コルーチンの参照を保持
 
+    //装備を獲得可能なソース
+    public HackSlashSource hackSource { get; private set; }
+
 
     // Start is called before the first frame update
     void Awake()
@@ -67,11 +70,11 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         missionManager = FindObjectOfType<MissionManager>();
 
         controller = GetComponent<RobotController>();
-        uiController = GetComponent<PlayerUIController>();
+        uiController = FindObjectOfType<PlayerUIController>();
 
         RegisterAction();
 
-        TestControls testControl = new TestControls();
+        InputControls testControl = new InputControls();
     }
 
     private void Start()
@@ -291,7 +294,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     //InputActionの登録を行う
     public void RegisterAction()
     {
-        TestControls testControl = new TestControls();
+        InputControls testControl = new InputControls();
 
         moveAction = testControl.Player.Move;
 
@@ -308,6 +311,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
             { testControl.Player.Boost, StartBoost },
             { testControl.Player.Jump, OnJump },
             { testControl.Player.Rise, StartRise },
+            { testControl.Player.Awake,ChangeAwake},
             { testControl.Player.CameraReset,CameraReset},
         };
 
@@ -386,8 +390,10 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         //デリゲートの呼び出し
         OnDeathWithName?.Invoke(gameObject.name);
 
+        controller.Die();
+
         //数秒後に破壊
-        Destroy(gameObject, 5f);
+        //Destroy(gameObject, 5f);
     }
 
     IEnumerator CountdownCoroutine()
@@ -431,6 +437,14 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
             //任務失敗
             FindObjectOfType<MissionManager>().MissionFail();
         }
+
+        //装備を獲得可能なエリアを出たなら獲得UIを非表示にする
+        if (other.tag == "HackSlashSource")
+        {
+            hackSource = null;
+
+            uiController.CloseHackSlashUI();
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -448,6 +462,21 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
             }
 
             outOfAreaCount = maxOutOfAreaCount;
+        }
+
+        //装備を獲得可能なエリアに入ったなら
+        if (other.tag=="HackSlashSource")
+        {
+            hackSource = other.GetComponent<HackSlashSource>();
+
+            if (!hackSource.isGeted)
+            {
+                uiController.OpenHackSlashUI(hackSource.selectItemList,hackSource);
+            }
+            else
+            {
+                hackSource = null;
+            }
         }
     }
 
@@ -500,6 +529,9 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     {
         controller.EndRise();
     }
+
+    //覚醒ボタンが押されたら
+    private void ChangeAwake(InputAction.CallbackContext context)=> controller.AwakeChange();
 
     private void CameraReset(InputAction.CallbackContext context)
     {

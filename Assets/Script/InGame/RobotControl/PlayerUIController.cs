@@ -5,11 +5,12 @@ using UnityEngine;
 public class PlayerUIController : MonoBehaviour
 {
     //UI類
-    public BarUI hpBar, boostBar;
+    public BarUI hpBar, boostBar,quorraBar;
     public RockOnUI rockOnUI;
     public WeaponUseInfoUI weaponInfoUI;
     public OutOfAreaUI outOfAreaUI;
     public BackToBaseUI backToBaseUI;
+    public HackSlashUI hackSlashUI;
 
     // Start is called before the first frame update
     void Start()
@@ -58,17 +59,37 @@ public class PlayerUIController : MonoBehaviour
         boostBar.ValueChange(nowBoost);
     }
 
+    public void QuorraBarChange(float nowQuorra)
+    {
+        quorraBar.ValueChange(nowQuorra);
+    }
+
+    public void OpenHackSlashUI(List<ItemData> items,HackSlashSource source)
+    {
+        hackSlashUI.InitializeUI(items,source);
+        hackSlashUI.OpenWindow();
+    }
+
+    public void CloseHackSlashUI()
+    {
+        hackSlashUI.CloseWindow();
+    }
+
     //UIセットアップ
     public void UIInitlaize(RobotStatusController statusControl)
     {
         hpBar.ValueSetUp(statusControl.nowStatus.maxHP, statusControl.hp);
         boostBar.ValueSetUp(statusControl.nowStatus.boostAmount, statusControl.nowStatus.boostAmount);
+        quorraBar.ValueSetUp(statusControl.nowStatus.quorraAmount, statusControl.nowStatus.quorraAmount-statusControl.usedQuorra);
+
         weaponInfoUI.SetUp(statusControl.GetComponent<RobotSetUpController>());
 
 
         //イベントのサブスクライブなどを行う
         statusControl.OnHPChanged += HPBarChange;
         statusControl.OnBoostChanged += BoostBarChange;
+        statusControl.OnQuorraChanged += QuorraBarChange;
+
         statusControl.GetComponent<RobotPlayerInput>().OutOfAreaCountDown += CountDownChange;
     }
 }

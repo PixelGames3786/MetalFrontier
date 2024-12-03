@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: GatlingGun01
   m_EditorClassIdentifier: 
   ItemNumber: 503
-  Name: "\u30AC\u30C8\u30EA\u30F3\u30B0\u30AC\u30F301"
-  Description: 
+  price: 0
+  itemName: "\u30AC\u30C8\u30EA\u30F3\u30B001"
+  Description: "\u306A\u3057"
   setType: 1
   weaponType: 0
   attackType: 0

@@ -36,7 +36,7 @@ public class ShopGoodsStatusUI : MonoBehaviour
     {
         goodsData = data;
 
-        nameText.text= goodsData.Name;
+        nameText.text= goodsData.itemName;
         descriptText.text = goodsData.Description;
         priceText.text = goodsData.price+" Col";
     }

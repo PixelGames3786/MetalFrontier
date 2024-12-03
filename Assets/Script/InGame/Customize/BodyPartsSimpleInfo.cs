@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
+using DG.Tweening;
 
-public class BodyPartsSimpleInfo : MonoBehaviour
+public class BodyPartsSimpleInfo : SimpleInfoBase
 {
     private HavingItem haveItemData;
     private BodyPartsData PartsData;
@@ -29,7 +31,7 @@ public class BodyPartsSimpleInfo : MonoBehaviour
         PartsData = itemData;
         haveItemData=having;
 
-        PartsNameText.text = PartsData.Name;
+        PartsNameText.text = PartsData.itemName;
     }
 
     public void OnClick()

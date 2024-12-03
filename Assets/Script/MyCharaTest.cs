@@ -28,7 +28,7 @@ public class MyCharaTest : MonoBehaviour
 
     public CameraSwing cameraSwing;
 
-    private TestControls testControl;
+    private InputControls testControl;
 
     // 2²“ü—Í‚ğó‚¯æ‚é‘z’è‚ÌAction
     private InputAction moveAction, shotAction, boostAct;
@@ -42,7 +42,7 @@ public class MyCharaTest : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        testControl = new TestControls();
+        testControl = new InputControls();
 
         // InputActions‚Ìİ’è‚ğæ“¾
         moveAction = testControl.Player.Move;

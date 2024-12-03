@@ -16,6 +16,8 @@ public class Pistol01 : WeaponBase
 
     public float maxAngle, bulletSpeed,shotInterval;
 
+    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -41,6 +43,7 @@ public class Pistol01 : WeaponBase
         }
     }
 
+
     public override async void Use(Transform target = null)
     {
         if (!canShot) return;
@@ -53,8 +56,9 @@ public class Pistol01 : WeaponBase
 
         Rigidbody bulletRb = bulletObj.GetChild(0).GetComponent<Rigidbody>();
 
+        //é©ï™é©êgÇ∆Ç‘Ç¬Ç©ÇÁÇ»Ç¢ÇÊÇ§Ç…Ç∑ÇÈ
         Physics.IgnoreCollision(bulletRb.gameObject.GetComponent<Collider>(), transform.GetChild(0).GetComponent<Collider>(), true);
-
+        Physics.IgnoreCollision(bulletRb.gameObject.GetComponent<Collider>(), controller.GetComponent<Collider>(), true);
 
         Vector3 shotPower = Vector3.zero;
 

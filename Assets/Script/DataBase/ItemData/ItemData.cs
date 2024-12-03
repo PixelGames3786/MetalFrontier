@@ -10,7 +10,7 @@ public class ItemData : ScriptableObject
 
     public int price; //”Ì”„‰¿Ši
 
-    public string Name;
+    public string itemName;
 
     [TextArea]
     public string Description;

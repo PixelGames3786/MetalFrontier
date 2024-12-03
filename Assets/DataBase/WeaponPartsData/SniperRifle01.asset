@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: SniperRifle01
   m_EditorClassIdentifier: 
   ItemNumber: 504
-  Name: "\u30B9\u30CA\u30A4\u30D1\u30FC\u30E9\u30A4\u30D5\u30EB01"
-  Description: 
+  price: 0
+  itemName: "\u30B9\u30CA\u30A4\u30D1\u30FC\u30E9\u30A4\u30D5\u30EB01"
+  Description: "\u306A\u3057"
   setType: 1
   weaponType: 0
   attackType: 0

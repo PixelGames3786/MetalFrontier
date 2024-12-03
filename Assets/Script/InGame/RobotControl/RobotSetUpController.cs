@@ -20,9 +20,13 @@ public class RobotSetUpController : MonoBehaviour
         {LegacySettingData.WeaponSetPosi.RightShoulder,null },
     };
 
+    private RobotController controller;
+
     // Start is called before the first frame update
     void Start()
     {
+        controller= GetComponent<RobotController>();
+
         //自身の子供からMeshFilterコンポーネントを持つ子をすべて取得して辞書に登録
         MeshFilter[] meshFilters = transform.GetComponentsInChildren<MeshFilter>();
 
@@ -58,6 +62,9 @@ public class RobotSetUpController : MonoBehaviour
             createdWeaponsObj[keyValue.Key] = Instantiate(weaponPrefab, weaponParent).transform;
             createdWeaponsObj[keyValue.Key].GetComponent<WeaponBase>().weaponPosition = keyValue.Key;
             createdWeaponsObj[keyValue.Key].GetComponent<WeaponBase>().legacyStatus = GetComponent<RobotStatusController>().nowStatus;
+
+            createdWeaponsObj[keyValue.Key].GetComponent<WeaponBase>().controller = controller;
         }
     }
+
 }
