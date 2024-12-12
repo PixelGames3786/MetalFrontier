@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using TMPro;
+using UnityEngine.InputSystem;
+using UnityEditor.Rendering.Universal.ShaderGUI;
 
 public class MissionResultManager : MonoBehaviour
 {
@@ -13,11 +15,15 @@ public class MissionResultManager : MonoBehaviour
 
     public GameObject itemInfoPrefab;
 
-    public TextMeshProUGUI missionNameText,clearOrFailText,getColText;
+    public RectTransform missionParent,getColParent,getItemParent;
+
+    public TextMeshProUGUI missionNameText,clearOrFailText,getColText,backDockText;
 
     public GameObject getColTitle, getPartsTitle, itemScrollView;
 
     public RectTransform content;
+
+    private InputAction canselAct;
 
     // Start is called before the first frame update
     void Start()
@@ -25,49 +31,89 @@ public class MissionResultManager : MonoBehaviour
         
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public void ResultSetUp()
     {
+        InputControls inputControl = new InputControls();
+
+        canselAct = inputControl.UI.Cancel;
+        canselAct.performed += BackToDock;
+
         MissionCondition condition=FindObjectOfType<MissionCondition>();
 
         missionNameText.text = condition.missionData.missionName;
 
+        //クリアしたかどうかで処理を変える
         if (condition.isMissionClear)
         {
-            clearOrFailText.text = "Clear";
-
-            getColText.text = "+" + condition.missionData.clearGetCol.ToString() + "col";
-
-            foreach (ItemData data in condition.missionData.clearGetItems)
-            {
-                GameObject infoObj = Instantiate(itemInfoPrefab, content);
-
-                infoObj.GetComponent<ItemSimpleInfo>().InitalizeUI(data, null);
-            }
+            ClearSetUp(condition);
         }
         else
         {
-            clearOrFailText.text = "Fail";
-
-            getColText.gameObject.SetActive(false);
-            getColTitle.gameObject.SetActive(false);
-
-            getPartsTitle.gameObject.SetActive(false);
-            itemScrollView.gameObject.SetActive(false);
+            FailSetUp();
         }
 
         gameObject.SetActive(true);
 
-        resultCanvas.DOFade(1f,1f);
+        resultCanvas.DOFade(1f, 1f).OnComplete(() => 
+        {
+            ResultSlideIn();
+        });
     }
 
-    public void BackToDock()
+    private void ClearSetUp(MissionCondition condition)
+    {
+        List<HavingItem> getItems = missionManager.getItems;
+
+        clearOrFailText.text = "Clear";
+
+        getColText.text = "+" + condition.missionData.clearGetCol.ToString() + "col";
+
+        foreach (HavingItem data in getItems)
+        {
+            GameObject infoObj = Instantiate(itemInfoPrefab, content);
+
+            infoObj.GetComponent<ItemSimpleInfo>().InitalizeUI(data.itemData, null);
+        }
+    }
+
+    private void FailSetUp()
+    {
+        clearOrFailText.text = "Fail";
+
+        getColText.gameObject.SetActive(false);
+        getColTitle.gameObject.SetActive(false);
+
+        getPartsTitle.gameObject.SetActive(false);
+        itemScrollView.gameObject.SetActive(false);
+    }
+
+    //結果をDotweenでフェードインさせる
+    private void ResultSlideIn()
+    {
+        Sequence slideInSequence=DOTween.Sequence();
+
+        slideInSequence.Append(missionParent.DOLocalMoveX(0f, 0.5f)).Join(missionParent.GetComponent<CanvasGroup>().DOFade(1f,0.5f));
+        slideInSequence.AppendInterval(0.5f);
+        slideInSequence.Append(getColParent.DOLocalMoveX(0f, 0.5f)).Join(getColParent.GetComponent<CanvasGroup>().DOFade(1f, 0.5f));
+        slideInSequence.AppendInterval(0.5f);
+        slideInSequence.Append(getItemParent.DOLocalMoveX(0f, 0.5f)).Join(getItemParent.GetComponent<CanvasGroup>().DOFade(1f, 0.5f));
+        slideInSequence.AppendInterval(0.5f);
+        slideInSequence.Append(backDockText.DOFade(1f,0.5f));
+
+        slideInSequence.OnComplete(() => { canselAct.Enable(); });
+
+        slideInSequence.Play();
+    }
+
+    public void BackToDock(InputAction.CallbackContext context)
     {
         missionManager.CurtainTransition("DockScene");
+    }
+
+    public void OnDisable()
+    {
+        canselAct.performed -= BackToDock;
+
+        canselAct.Dispose();
     }
 }

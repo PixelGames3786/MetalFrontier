@@ -19,8 +19,6 @@ public class ShoulderCanon01 : WeaponBase
 
     public Transform pivotObj;
 
-    public float bulletSpeed,shotInterval;
-
     //射撃可能か
     private bool canShot=true;
 
@@ -35,14 +33,14 @@ public class ShoulderCanon01 : WeaponBase
     {
         if (isIntervalWait)
         {
-            intervalWaitTime += Time.deltaTime;
+            intervalElapseTime += Time.deltaTime;
 
-            if (intervalWaitTime >= useInterval)
+            if (intervalElapseTime >= weaponData.useInterval)
             {
                 canShot = true;
                 isIntervalWait = false;
 
-                intervalWaitTime = 0;
+                intervalElapseTime = 0;
                 OnEndInterval?.Invoke(weaponPosition);
             }
         }
@@ -50,7 +48,7 @@ public class ShoulderCanon01 : WeaponBase
 
     public override async void Use(Transform target = null)
     {
-        if (!canShot) return;
+        if (!canShot || leftBulletNum == 0) return;
 
         canShot = false;
 
@@ -58,23 +56,37 @@ public class ShoulderCanon01 : WeaponBase
 
         Rigidbody bulletRb = bulletObj.GetChild(0).GetComponent<Rigidbody>();
 
-        Physics.IgnoreCollision(bulletRb.gameObject.GetComponent<Collider>(),mainUnitCollider, true);
+        //自身に当たらないように
+        Physics.IgnoreCollision(bulletRb.gameObject.GetComponent<Collider>(), transform.GetChild(0).GetComponent<Collider>(), true);
+        Physics.IgnoreCollision(bulletRb.gameObject.GetComponent<Collider>(), controller.GetComponent<Collider>(), true);
 
-        Vector3 shotPower = Vector3.zero;
+        //ダメージ登録
+        Bullet bullet = bulletObj.GetComponentInChildren<Bullet>();
+
+        bullet.attackData.type = weaponData.attackType;
+        bullet.attackData.damage = weaponData.damage;
+
+        Vector3 shotVector = Vector3.zero;
 
         if (target)
         {
-            shotPower=(target.position-ShotPosi.position).normalized*bulletSpeed;
+            shotVector = (target.position - ShotPosi.position).normalized;
         }
         else
         {
-            shotPower = pivotObj.forward * bulletSpeed;
+            shotVector = pivotObj.forward;
         }
 
-        bulletRb.AddForce(shotPower, ForceMode.Impulse);
+        bulletRb.AddForce(shotVector*weaponData.bulletSpeed, ForceMode.Impulse);
 
         //射撃可能間隔を待つ
         isIntervalWait = true;
+
+        leftBulletNum--;
+        leftBulletNum = Mathf.Clamp(leftBulletNum, 0, maxBulletNum);
+
+        onLeftBulletChange?.Invoke(weaponPosition);
+
         OnStartInterval?.Invoke(weaponPosition);
     }
 }

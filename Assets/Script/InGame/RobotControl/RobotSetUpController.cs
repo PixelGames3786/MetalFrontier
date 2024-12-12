@@ -60,10 +60,14 @@ public class RobotSetUpController : MonoBehaviour
 
             //•Ší‚É‘•”õˆÊ’u‚ğ“o˜^
             createdWeaponsObj[keyValue.Key] = Instantiate(weaponPrefab, weaponParent).transform;
-            createdWeaponsObj[keyValue.Key].GetComponent<WeaponBase>().weaponPosition = keyValue.Key;
-            createdWeaponsObj[keyValue.Key].GetComponent<WeaponBase>().legacyStatus = GetComponent<RobotStatusController>().nowStatus;
 
-            createdWeaponsObj[keyValue.Key].GetComponent<WeaponBase>().controller = controller;
+            WeaponBase weaponBase = createdWeaponsObj[keyValue.Key].GetComponent<WeaponBase>();
+
+            weaponBase.DataInitialize(data);
+            weaponBase.weaponPosition = keyValue.Key;
+            weaponBase.legacyStatus = GetComponent<RobotStatusController>().nowStatus;
+
+            weaponBase.controller = controller;
         }
     }
 

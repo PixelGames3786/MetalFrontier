@@ -13,12 +13,20 @@ MonoBehaviour:
   m_Name: ShoulderRocket01
   m_EditorClassIdentifier: 
   ItemNumber: 502
+  itemType: 1
   price: 0
   itemName: "\u80A9\u30ED\u30B1\u30C3\u30C801"
   Description: "\u306A\u3057"
   setType: 0
   weaponType: 1
   attackType: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
+  bulletSpeed: 50
+  damage: 25
+  shotBlur: 0
+  useInterval: 1.5
+  defaultBullet: 100
   setPosiWithPrefab:
     _list:
     - key: 2

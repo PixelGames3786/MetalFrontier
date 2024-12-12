@@ -5,7 +5,7 @@ using TMPro;
 
 public class WeaponPartsSimpleInfo : SimpleInfoBase
 {
-    private HavingItem haveItemData;
+    public HavingItem haveItemData {  get; private set; }
     private WeaponPartsData PartsData;
 
     public TextMeshProUGUI PartsNameText;
@@ -32,7 +32,7 @@ public class WeaponPartsSimpleInfo : SimpleInfoBase
         PartsNameText.text = PartsData.itemName;
     }
 
-    public void OnClick()
+    public override void OnSelect()
     {
         //既にそのアイテムが装備されていないなら装備　装備されているなら外す（同じ部位のパーツの選択中に限り）
         scrollView.WeaponPartsSelect(PartsData.ItemNumber, haveItemData);

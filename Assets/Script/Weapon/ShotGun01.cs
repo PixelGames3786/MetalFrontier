@@ -18,14 +18,12 @@ public class ShotGun01 : WeaponBase
 
     public float maxAngle, bulletSpeed,shotInterval;
 
-    public float shotBlur;
     //ショットガンなので、同時にどれくらいの弾が発射されるか
     public int shotBulletNum;
 
     // Start is called before the first frame update
     void Start()
     {
-
     }
 
     // Update is called once per frame
@@ -33,14 +31,14 @@ public class ShotGun01 : WeaponBase
     {
         if (isIntervalWait)
         {
-            intervalWaitTime += Time.deltaTime;
+            intervalElapseTime += Time.deltaTime;
 
-            if (intervalWaitTime >= useInterval)
+            if (intervalElapseTime >= weaponData.useInterval)
             {
                 canShot = true;
                 isIntervalWait = false;
 
-                intervalWaitTime = 0;
+                intervalElapseTime = 0;
 
                 OnEndInterval?.Invoke(weaponPosition);
             }
@@ -49,12 +47,12 @@ public class ShotGun01 : WeaponBase
 
     public override async void Use(Transform target = null)
     {
-        if (!canShot) return;
+        if (!canShot || leftBulletNum==0) return;
 
         canShot = false;
 
         //ステータスの射撃精度を考慮した実効ブレを計算
-        float actualBlur = shotBlur / (1+legacyStatus.shotAccuracy);
+        float actualBlur = weaponData.shotBlur / (1+legacyStatus.shotAccuracy);
 
         //同時に複数発射する
         for (int i=0;i<shotBulletNum;i++)
@@ -63,10 +61,28 @@ public class ShotGun01 : WeaponBase
 
             Rigidbody bulletRb = bulletObj.GetChild(0).GetComponent<Rigidbody>();
 
+            //自身に当たらないように
             Physics.IgnoreCollision(bulletRb.gameObject.GetComponent<Collider>(), transform.GetChild(0).GetComponent<Collider>(), true);
+            Physics.IgnoreCollision(bulletRb.gameObject.GetComponent<Collider>(), controller.GetComponent<Collider>(), true);
+
+            //ダメージ登録
+            Bullet bullet = bulletObj.GetComponentInChildren<Bullet>();
+
+            bullet.attackData.type = weaponData.attackType;
+            bullet.attackData.damage = weaponData.damage;
+
+            Vector3 shotVector = pivotObj.forward;
+
+            if (target)
+            {
+                shotVector = (target.position - ShotPosi.position).normalized;
+            }
+            else
+            {
+                shotVector = pivotObj.forward;
+            }
 
             //ブレを適用する ランダムを二つ組み合わせて正規分布っぽくする
-            Vector3 shotVector = pivotObj.forward;
             float verticalBlur = (Random.Range(-actualBlur, actualBlur) + Random.Range(-actualBlur, actualBlur)) / 2;
             float horizontalBlur= (Random.Range(-actualBlur, actualBlur) + Random.Range(-actualBlur, actualBlur)) / 2;
 
@@ -75,11 +91,16 @@ public class ShotGun01 : WeaponBase
 
             shotVector = shotVector + VerticalBlur + HorizontalBlur;
 
-            bulletRb.AddForce(shotVector * bulletSpeed, ForceMode.Impulse);
+            bulletRb.AddForce(shotVector * weaponData.bulletSpeed, ForceMode.Impulse);
         }
 
         //射撃可能間隔を待つ
         isIntervalWait = true;
+
+        leftBulletNum--;
+        leftBulletNum = Mathf.Clamp(leftBulletNum, 0, maxBulletNum);
+
+        onLeftBulletChange?.Invoke(weaponPosition);
 
         OnStartInterval?.Invoke(weaponPosition);
     }

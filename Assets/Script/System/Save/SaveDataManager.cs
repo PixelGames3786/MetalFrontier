@@ -50,7 +50,6 @@ public class SaveDataManager : MonoBehaviour
         {
             NewGameFlag = false;
         }
-
     }
 
     // Start is called before the first frame update
@@ -82,6 +81,8 @@ public class SaveDataManager : MonoBehaviour
         {
             saveData = new SaveData();
             saveData.DataInitialize();
+
+            SaveFileWriteAsync();
         }
         else
         {

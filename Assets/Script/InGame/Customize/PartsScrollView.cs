@@ -3,19 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Newtonsoft.Json;
 using static UnityEditor.Progress;
+using static BodyPartsData;
+using UnityEditor;
+using System.Linq;
 
 public class PartsScrollView : MonoBehaviour
 {
-    public CustomizeUIController controller;
-
     public Camera uiCamera;
 
     public ScrollRect scrollRect;
     public RectTransform content;
 
     [SerializeField]
-    private GameObject PartsInfoPrefab,weaponInfoPrefab;
+    private GameObject PartsInfoPrefab, weaponInfoPrefab;
 
     private int forcusInfoNum; //現在選択中の商品の番号
 
@@ -26,20 +28,24 @@ public class PartsScrollView : MonoBehaviour
 
     //現在変更している武器の部位
     public LegacySettingData.WeaponSetPosi setPosi;
+    public BodyPartsData.PartsType setPartsType;
+
+    [SerializeField]
+    private CustomizeUIController uiControl;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
-    public void InitializeUI(List<BodyPartsData> displayItems,List<HavingItem> havingItems)
+    public void InitializeUI(List<BodyPartsData> displayItems, List<HavingItem> havingItems)
     {
         //子供を全消ししてリセット
         simpleInfos.Clear();
@@ -61,6 +67,8 @@ public class PartsScrollView : MonoBehaviour
         scrollType = 0;
 
         forcusInfo.OnForcus();
+        StatusReflesh();
+
     }
 
     public void InitializeUI(List<WeaponPartsData> displayWeapons, List<HavingItem> havingItems)
@@ -69,7 +77,7 @@ public class PartsScrollView : MonoBehaviour
         simpleInfos.Clear();
         content.DestroyAllChilds();
 
-        for (int i=0;i<displayWeapons.Count;i++)
+        for (int i = 0; i < displayWeapons.Count; i++)
         {
             WeaponPartsSimpleInfo info = Instantiate(weaponInfoPrefab, content).GetComponent<WeaponPartsSimpleInfo>();
 
@@ -85,15 +93,16 @@ public class PartsScrollView : MonoBehaviour
         scrollType = 1;
 
         forcusInfo.OnForcus();
+        StatusReflesh();
     }
 
     public void OpenScrollView()
     {
-        GetComponent<RectTransform>().DOScaleX(1f, 1f);
+        GetComponent<RectTransform>().DOScaleX(1f, 0.5f);
     }
     public void CloseScrollView()
     {
-        GetComponent<RectTransform>().DOScaleX(0f, 1f);
+        GetComponent<RectTransform>().DOScaleX(0f, 0.5f);
     }
 
     public void ChangeForcus(int changeNum)
@@ -112,6 +121,27 @@ public class PartsScrollView : MonoBehaviour
             forcusInfo = newForcus;
 
             EnsureVisible(forcusInfo.GetComponent<RectTransform>());
+
+            StatusReflesh();
+        }
+    }
+
+    public void StatusReflesh()
+    {
+        if (scrollType == 0)
+        {
+            Dictionary<PartsType, HavingItem> partsNumber = SaveDataManager.instance.saveData.settingData.PartsNumber;
+
+            var deepCopyDict = new Dictionary<PartsType, HavingItem>(
+                partsNumber.ToDictionary(entry => entry.Key, entry => entry.Value)
+            );
+
+            BodyPartsSimpleInfo simpleInfo = forcusInfo as BodyPartsSimpleInfo;
+            deepCopyDict[setPartsType] = simpleInfo.haveItemData;
+
+            uiControl.statusUI.NowStatusInitialize();
+            uiControl.statusUI.NewStatusInitialize(deepCopyDict);
+            uiControl.statusUI.UIInitialize();
         }
     }
 
@@ -153,25 +183,30 @@ public class PartsScrollView : MonoBehaviour
         }
     }
 
-    public void BodyPartsSelect(BodyPartsData.PartsType type,int partsNum,HavingItem having)
+    public void SelectConfirm()
     {
-        controller.LegacyPartsChange(type,partsNum,having);
+        forcusInfo.OnSelect();
     }
 
-    public void WeaponPartsSelect(int partsNum,HavingItem having)
+    public void BodyPartsSelect(BodyPartsData.PartsType type, int partsNum, HavingItem having)
+    {
+        uiControl.LegacyPartsChange(type, partsNum, having);
+    }
+
+    public void WeaponPartsSelect(int partsNum, HavingItem having)
     {
         //装備中でないアイテムなら普通に装備
         if (!having.equiped)
         {
             print("装備中でないためアイテムを交換");
 
-            controller.WeaponPartsChange(setPosi, partsNum, having);
+            uiControl.WeaponPartsChange(setPosi, partsNum, having);
         }
         else
         {
             print("装備中であるためアイテムを外す");
 
-            controller.WeaponPartsRemove(setPosi, partsNum, having);
+            uiControl.WeaponPartsRemove(setPosi, partsNum, having);
         }
     }
 

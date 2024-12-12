@@ -8,6 +8,7 @@ using Unity.VisualScripting.FullSerializer;
 using UnityEditor;
 using UnityEngine;
 using PartsType = BodyPartsData.PartsType;
+using Random = UnityEngine.Random;
 
 public class SaveData
 {
@@ -72,7 +73,7 @@ public class SaveData
         missionNumList.Add(1);
 
         //TODO デバッグ用に最初にぱーつをいくつか手に入れる
-        AddItemRange(new List<int> { 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 501, 502,506 });
+        AddItemRange(new List<int> { 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 501,507, 502,506 });
 
         shopGoodsNumList.Add(501);
         shopGoodsNumList.Add(502);
@@ -93,7 +94,7 @@ public class SaveData
 
         settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.LeftArm, WeaponsDataList[0]);
         settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.RightArm, null);
-        settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.LeftShoulder, null);
+        settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.LeftShoulder, WeaponsDataList[1]);
         settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.RightShoulder, null);
     }
 
@@ -158,12 +159,25 @@ public class SaveData
         return item;
     }
 
+    public void AddItem(HavingItem item) 
+    {
+        havingItemList.Add(item);
+    }
+
     public void AddItemRange(int[] itemNumArray)
     {
         foreach (int itemNum in itemNumArray)
         {
             havingItemList.Add(new HavingItem(itemNum));
         }
+    }
+
+    public void AddItemRange(HavingItem[] itemArray)
+    {
+        foreach (var item in itemArray) Debug.Log(item.itemData.itemName);
+
+        havingItemList.AddRange(itemArray);
+
     }
 
     public void AddItemRange(List<int> itemNumList)
@@ -288,6 +302,8 @@ public class HavingItem
     //装備済みを示す
     public bool equiped;
 
+    public int moduleSlotNum=0; //モジュールが設定可能なスロット数
+
     [JsonIgnore]
     private ItemData _itemData;
 
@@ -309,6 +325,37 @@ public class HavingItem
         uniqueId = Guid.NewGuid().ToString();
 
         itemNumber = num;
+
+        _itemData = GetItem();
+
+        //アイテムの種類がBodyParts,またはWeaponだったらモジュールスロット数をランダムに出す
+        switch (_itemData.itemType)
+        {
+            case ItemData.ItemType.BodyParts:
+
+                BodyPartsData bodyData = itemData as BodyPartsData;
+
+                moduleSlotNum = Random.Range(bodyData.minModuleSlot,bodyData.maxModuleSlot);
+
+                break;
+
+            case ItemData.ItemType.WeaponParts:
+
+                WeaponPartsData weaponData = itemData as WeaponPartsData;
+
+                moduleSlotNum = Random.Range(weaponData.minModuleSlot, weaponData.maxModuleSlot);
+
+                break;
+        }
+    }
+
+    [JsonConstructor]
+    public HavingItem(string uniqueId, int itemNumber, bool equipped, int moduleSlotNum)
+    {
+        this.uniqueId = uniqueId;
+        this.itemNumber = itemNumber;
+        this.equiped = equipped;
+        this.moduleSlotNum = moduleSlotNum;
 
         _itemData = GetItem();
     }

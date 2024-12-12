@@ -13,12 +13,20 @@ MonoBehaviour:
   m_Name: ShotGun01
   m_EditorClassIdentifier: 
   ItemNumber: 505
+  itemType: 1
   price: 0
   itemName: "\u30B7\u30E7\u30C3\u30C8\u30AC\u30F301"
   Description: "\u306A\u3057"
   setType: 1
   weaponType: 0
   attackType: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
+  bulletSpeed: 100
+  damage: 10
+  shotBlur: 0.15
+  useInterval: 0.8
+  defaultBullet: 100
   setPosiWithPrefab:
     _list:
     - key: 0

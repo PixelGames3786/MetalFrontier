@@ -12,7 +12,7 @@ public class ModuleDataBase : ScriptableObject
     //アイテム番号からアイテムを取得
     public ModuleData GetModule(int moduleNum)
     {
-        return ModuleDataList.FirstOrDefault(module => module.moduleNumber == moduleNum);
+        return ModuleDataList.FirstOrDefault(module => module.ItemNumber == moduleNum);
     }
 
     //アイテム番号のリストからアイテムのリストに変換

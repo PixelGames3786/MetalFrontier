@@ -40,6 +40,8 @@ public static class TransformExtends
     //子オブジェクトのレイヤーを全て変更
     public static void RecursiveSetLayer(this Transform target, int layer)
     {
+        target.gameObject.layer = layer;
+
         // 対象オブジェクトの子オブジェクトをチェックする
         foreach (Transform child in target)
         {

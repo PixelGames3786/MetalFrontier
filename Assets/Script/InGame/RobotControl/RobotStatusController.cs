@@ -14,14 +14,15 @@ public class RobotStatusController : MonoBehaviour
     public LegacySpecStatus nowStatus=new LegacySpecStatus();
 
     //デリゲート類の定義
-    public event Action<float> OnHPChanged,OnBoostChanged,OnQuorraChanged;
+    public event Action<float> onHPChanged,onBoostChanged,onQuorraChanged;
+    public event Action onInLowFuel, onOutLowFuel, onInOverHeat, onOutOverHeat,onInLowHP,onOutLowHP; //オーバーヒート状態に入った時・出た時
 
     //変動するステータス類　実HPとか　ブースト残量など
     public float hp;
     public float usedBoost; //使用済みブースト量
     public float usedQuorra; //使用済み覚醒量
 
-    private bool isOverHeat;
+    private bool isOverHeat,isLowFuel,isLowHP;
 
     public bool isRockOn { get; private set; }
 
@@ -49,9 +50,19 @@ public class RobotStatusController : MonoBehaviour
             robotControl.canBoost = false;
             robotControl.EndBoost();
             robotControl.EndRise();
+
+            onInOverHeat?.Invoke();
         }
 
-        OnBoostChanged?.Invoke(nowStatus.boostAmount-usedBoost);
+        //もしも全体の八割を使用したら
+        if (usedBoost>nowStatus.boostAmount*0.8f && !isLowFuel)
+        {
+            isLowFuel = true;
+
+            onInLowFuel?.Invoke();
+        }
+
+        onBoostChanged?.Invoke(nowStatus.boostAmount-usedBoost);
     }
 
     //使用済みブースト量を減らす
@@ -68,10 +79,22 @@ public class RobotStatusController : MonoBehaviour
             {
                 isOverHeat=false;
                 robotControl.canBoost = true;
+
+                Debug.Log("オーバーヒート状態から回復");
+
+                onOutOverHeat?.Invoke();
             }
         }
 
-        OnBoostChanged?.Invoke(nowStatus.boostAmount - usedBoost);
+        //もしも全体の二割以上回復したら(オーバーヒート状態の時は呼ばない)
+        if (usedBoost <= nowStatus.boostAmount * 0.8f && isLowFuel)
+        {
+            isLowFuel = false;
+
+            if(!isOverHeat) onOutLowFuel?.Invoke();
+        }
+
+        onBoostChanged?.Invoke(nowStatus.boostAmount - usedBoost);
     }
 
     //使用済み覚醒量を増やす
@@ -80,12 +103,12 @@ public class RobotStatusController : MonoBehaviour
         usedQuorra += useVal;
 
         //最後まで使用すると覚醒解除
-        if (usedBoost >= nowStatus.quorraAmount)
+        if (usedQuorra >= nowStatus.quorraAmount)
         {
             robotControl.AwakeEnd();
         }
 
-        OnQuorraChanged?.Invoke(nowStatus.quorraAmount - usedQuorra);
+        onQuorraChanged?.Invoke(nowStatus.quorraAmount - usedQuorra);
     }
 
     //使用済み覚醒量を減らす
@@ -98,7 +121,7 @@ public class RobotStatusController : MonoBehaviour
             usedQuorra = 0;
         }
 
-        OnQuorraChanged?.Invoke(nowStatus.quorraAmount - usedQuorra);
+        onQuorraChanged?.Invoke(nowStatus.quorraAmount - usedQuorra);
     }
 
     //HPを変動させる
@@ -108,7 +131,22 @@ public class RobotStatusController : MonoBehaviour
 
         hp = Mathf.Clamp(hp,0,nowStatus.maxHP);
 
-        OnHPChanged?.Invoke(hp);
+
+        //もしも最大HPの二割未満になっていたら
+        if (hp <nowStatus.maxHP*0.2f && !isLowHP)
+        {
+            isLowHP = true;
+            onInLowHP?.Invoke();
+        }
+
+        //もしも最大HPの二割以上になっていたら
+        if (hp >= nowStatus.maxHP * 0.2f && isLowHP)
+        {
+            isLowHP = false;
+            onOutLowHP?.Invoke();
+        }
+
+        onHPChanged?.Invoke(hp);
     }
 
     //覚醒状態に入る　ステータスを切り替える

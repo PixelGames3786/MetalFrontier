@@ -1,7 +1,7 @@
 using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
-using System.Xml.Schema;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Windows;
@@ -27,10 +27,10 @@ public class RobotController : MonoBehaviour
 
     //姿勢制御系
     [SerializeField]
-    private ShoulderTest leftShouler, rightShoulder;
+    private RobotShoulderControl leftShoulder, rightShoulder;
 
     [SerializeField]
-    private ArmTest leftArm, rightArm;
+    private RobotArmControl leftArm, rightArm;
 
     //武器系
     public WeaponBase LeftArmWeapon { get; private set; }
@@ -51,9 +51,11 @@ public class RobotController : MonoBehaviour
     public bool canBoost = true,canOperate; //ブースト可能か
 
     private bool isAwakening; //覚醒中か
+    public event Action onAwakeStart,onAwakeEnd;
+
+    public event Action onDied,onStartBoost;
 
     private Vector2 moveInput;
-
     private Vector3 moveDirection;
 
     //lineRenderer関連
@@ -85,7 +87,7 @@ public class RobotController : MonoBehaviour
         status = statusControl.nowStatus;
 
         //向いている方向に基づいて移動ベクトルを計算
-        moveDirection = (transform.forward * moveInput.y) + (transform.right * moveInput.x).normalized;
+        moveDirection = ((transform.forward * moveInput.y) + (transform.right * moveInput.x)).normalized;
 
         //ターゲッティング中かどうか
         if (target && lookTargetSetting)
@@ -110,6 +112,11 @@ public class RobotController : MonoBehaviour
     {
         if (!canOperate) return; //操作不能状態ならば行わない
 
+        Move();
+    }
+
+    private void Move()
+    {
         Vector3 velocity = new Vector3();
 
         if (isBoosting)
@@ -121,9 +128,9 @@ public class RobotController : MonoBehaviour
                 linePoints.RemoveAt(0);
             }
 
-            if(lineRenderer) DrawLine();
+            if (lineRenderer) DrawLine();
 
-            rb.AddForce(moveDirection * status.boostSpeed*Time.deltaTime, ForceMode.Impulse);
+            rb.AddForce(moveDirection * status.boostSpeed * Time.deltaTime*5, ForceMode.Impulse);
 
             //最大移動量を制限
             velocity.x = Mathf.Clamp(rb.velocity.x, status.boostMaxVel.x * -1, status.boostMaxVel.x);
@@ -199,10 +206,19 @@ public class RobotController : MonoBehaviour
     {
         target = tag;
 
-        leftShouler.target = tag;
+        leftShoulder.target = tag;
         rightShoulder.target = tag;
         leftArm.target = tag;
         rightArm.target = tag;
+    }
+
+    //腕や肩が敵を向くように設定
+    public void SetArmLookAt(bool val)
+    {
+        leftShoulder.SetLookAt(val);
+        rightShoulder.SetLookAt(val);
+        leftArm.SetLookAt(val);
+        rightArm.SetLookAt(val);
     }
 
 
@@ -230,6 +246,8 @@ public class RobotController : MonoBehaviour
     //死亡時処理
     public void Die()
     {
+        onDied?.Invoke();
+
         armatureAnimator.SetBool("IsDied",true);
 
         GetComponent<CapsuleCollider>().radius = 1.8f;
@@ -308,16 +326,20 @@ public class RobotController : MonoBehaviour
         }
     }
 
-    //覚醒状態に入る
+    //覚醒状態から出る
     public void AwakeEnd()
     {
+        onAwakeEnd?.Invoke();
+
         isAwakening = false;
         statusControl.EndAwake();
     }
 
-    //覚醒状態から出る
+    //覚醒状態に入る
     public void AwakeStart()
     {
+        onAwakeStart?.Invoke();
+
         isAwakening = true;
         statusControl.StartAwake();
     }
@@ -332,6 +354,8 @@ public class RobotController : MonoBehaviour
         isBoosting = true;
 
         armatureAnimator.SetBool("IsBoosting", true);
+
+        onStartBoost?.Invoke();
     }
 
     //ブースト終了

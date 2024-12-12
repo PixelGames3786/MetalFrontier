@@ -34,6 +34,5 @@ public class ItemSimpleInfo : MonoBehaviour
 
     public void OnClick()
     {
-        //if(!haveItemData.equiped) scrollView.BodyPartsSelect(partsData.Type,partsData.ItemNumber,haveItemData);
     }
 }

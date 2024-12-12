@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class ShoulderRocket01Bullet : MonoBehaviour
@@ -19,7 +20,7 @@ public class ShoulderRocket01Bullet : MonoBehaviour
 
     private float trackingElapsedTime=0; //追尾経過時間
 
-    private bool isMoving = false;
+    private bool isMoving,isHoming=true;
 
     private CancellationTokenSource cts;
 
@@ -41,28 +42,28 @@ public class ShoulderRocket01Bullet : MonoBehaviour
     {
         if (!isMoving) return;
 
-        if (target != null)
+        if (trackingElapsedTime >= trackingTime)
         {
-            dir = (target.position - transform.position).normalized;
-
-            //追尾時間中は追尾する
-            if (trackingTime>=trackingElapsedTime)
-            {
-                // ゆるくターゲットの方向へ回転する
-                Quaternion lookRotation = Quaternion.LookRotation(dir);
-                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, rotateSpeed * Time.deltaTime);
-
-                trackingElapsedTime += Time.deltaTime;
-            }
-
-            // 前方に進む
-            rb.AddForce(transform.forward * bulletSpeed * Time.deltaTime);
+            isHoming = false;
         }
-        else
+    }
+
+    void FixedUpdate()
+    {
+        if (target == null) return;
+
+        if (isHoming)
         {
-            // ターゲットがない場合、前方に進み続ける
-            rb.AddForce(transform.forward * bulletSpeed * Time.deltaTime);
+            //向きをターゲットの方に向ける
+            var diff = (target.transform.position - transform.position).normalized;
+
+            //ゆるくターゲットの方向へ回転する
+            Quaternion lookRotation = Quaternion.LookRotation(diff, transform.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, rotateSpeed * Time.deltaTime);
         }
+
+        //まっすぐ進む
+        GetComponent<Rigidbody>().velocity = transform.forward * bulletSpeed;
     }
 
     public void Shot(Transform tag,Vector3 shotPower)
@@ -95,14 +96,14 @@ public class ShoulderRocket01Bullet : MonoBehaviour
             cts.Cancel();
             cts.Dispose();
 
-            Destroy(transform.parent.gameObject);
+            Destroy(transform.gameObject);
         }
         else
         {
             cts.Cancel();
             cts.Dispose();
 
-            Destroy(transform.parent.gameObject);
+            Destroy(transform.gameObject);
         }
     }
 

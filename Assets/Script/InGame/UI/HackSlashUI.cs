@@ -99,7 +99,7 @@ public class HackSlashUI : MonoBehaviour
     private void ConfirmAction(InputAction.CallbackContext context)
     {
         //ƒAƒCƒeƒ€“üèˆ—
-        SaveDataManager.instance.saveData.AddItem(forcusInfo.itemData.ItemNumber);
+        FindObjectOfType<MissionManager>().GetItem(forcusInfo.itemData.ItemNumber);
         hackSource.HackGet();
 
         CloseWindow();

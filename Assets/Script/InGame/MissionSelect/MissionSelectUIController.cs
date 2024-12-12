@@ -10,6 +10,7 @@ using Cysharp.Threading.Tasks;
 using UnityEditor.ShaderGraph;
 using UnityEditor;
 using static ShopControllerState;
+using static CustomizeControlState;
 
 public class MissionSelectUIController : MonoBehaviour
 {
@@ -18,18 +19,9 @@ public class MissionSelectUIController : MonoBehaviour
         //コンストラクタ　初期化
         public WaitState(MissionSelectUIController controller)
         {
-            State = MissionSelectStateEnum.Wait;
+            state = MissionSelectStateEnum.Wait;
 
-            uiController = controller;
-
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
-
+            uiControl = controller;
         }
     }
 
@@ -38,9 +30,9 @@ public class MissionSelectUIController : MonoBehaviour
         //コンストラクタ　初期化
         public SelectMissionState(MissionSelectUIController controller)
         {
-            State = MissionSelectStateEnum.SelectMission;
+            state = MissionSelectStateEnum.SelectMission;
 
-            uiController = controller;
+            uiControl = controller;
 
             actionDic = new Dictionary<string, Action>()
             {
@@ -55,24 +47,34 @@ public class MissionSelectUIController : MonoBehaviour
 
         public override void OnEnter()
         {
-            uiController.upArrowAct.performed += UpArrowAction;
-            uiController.downArrowAct.performed += DownArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
-            uiController.canselAct.performed += CanselAction;
+            uiControl.missionScrollView.InitializeScrollView(SaveDataManager.instance.saveData.missionDataList);
 
-            uiController.gameObject.SetActive(true);
-            uiController.GetComponent<CanvasGroup>().DOFade(1f, 0.5f);
+            if (uiControl.beforeState.state == MissionSelectStateEnum.Wait)
+            {
+                uiControl.transitionManager.onTransitionComplete += InputActionRegister;
+            }
+            else
+            {
+                InputActionRegister();
+            }
+        }
 
-            uiController.missionScrollView.InitializeScrollView(SaveDataManager.instance.saveData.missionDataList);
-            uiController.missionScrollView.OpenScrollView();
+        private void InputActionRegister()
+        {
+            uiControl.upArrowAct.performed += UpArrowAction;
+            uiControl.downArrowAct.performed += DownArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
+            uiControl.cancelAct.performed += CanselAction;
         }
 
         public override void OnExit()
         {
-            uiController.upArrowAct.performed -= UpArrowAction;
-            uiController.downArrowAct.performed -= DownArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
-            uiController.canselAct.performed-=CanselAction;
+            uiControl.transitionManager.onTransitionComplete -= InputActionRegister;
+
+            uiControl.upArrowAct.performed -= UpArrowAction;
+            uiControl.downArrowAct.performed -= DownArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
+            uiControl.cancelAct.performed-=CanselAction;
         }
 
         private void InfoOnForcus(object[] args)
@@ -83,39 +85,36 @@ public class MissionSelectUIController : MonoBehaviour
 
         private void OpenMissionStatus(MissionData selectMission)
         {
-            uiController.missionStatus.InitializeUI(selectMission);
-            uiController.missionStatus.OpenWindow();
+            uiControl.missionStatus.InitializeUI(selectMission);
+            uiControl.missionStatus.OpenWindow();
         }
 
         private void CloseMissionStatus()
         {
-            uiController.missionStatus.CloseWindow();
+            uiControl.missionStatus.CloseWindow();
         }
 
         private void UpArrowAction(InputAction.CallbackContext context)
         {
-            uiController.missionScrollView.ChangeForcus(-1);
+            uiControl.missionScrollView.ChangeForcus(-1);
         }
 
         private void DownArrowAction(InputAction.CallbackContext context)
         {
-            uiController.missionScrollView.ChangeForcus(1);
+            uiControl.missionScrollView.ChangeForcus(1);
         }
 
         private void ConfirmAction(InputAction.CallbackContext context) //確定
         {
-            uiController.StateTranstion(MissionSelectStateEnum.ConfirmCheck);
+            uiControl.StateTranstion(MissionSelectStateEnum.ConfirmCheck);
         }
 
         private void CanselAction(InputAction.CallbackContext context)
         {
-            uiController.GetComponent<CanvasGroup>().DOFade(0f, 0.5f);
+            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.Terminal, DockImageTransition.MenuType.Mission);
 
             FindObjectOfType<MainMenuUIController>().StateTranstion(MainMenuState.MainMenuStateEnum.SelectMenu);
-            uiController.StateTranstion(MissionSelectStateEnum.Wait);
-
-            uiController.missionScrollView.CloseScrollView();
-            uiController.missionStatus.CloseWindow();
+            uiControl.StateTranstion(MissionSelectStateEnum.Wait);
         }
     }
 
@@ -124,65 +123,69 @@ public class MissionSelectUIController : MonoBehaviour
         //コンストラクタ　初期化
         public ConfirmCheckState(MissionSelectUIController controller)
         {
-            State = MissionSelectStateEnum.ConfirmCheck;
+            state = MissionSelectStateEnum.ConfirmCheck;
 
-            uiController = controller;
-
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
+            uiControl = controller;
         }
 
         public override void OnEnter()
         {
-            uiController.confirmCheck.InitializeMissionUI(uiController.missionScrollView.forcusInfo.missionData);
-            uiController.confirmCheck.OpenWindow();
+            uiControl.confirmCheck.InitializeMissionUI(uiControl.missionScrollView.forcusInfo.missionData);
+            uiControl.confirmCheck.OpenWindow();
 
-            uiController.leftArrowAct.performed += LeftArrowAction;
-            uiController.rightArrowAct.performed += RightArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
+            uiControl.leftArrowAct.performed += LeftArrowAction;
+            uiControl.rightArrowAct.performed += RightArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
         }
 
         public override void OnExit()
         {
-            uiController.leftArrowAct.performed -= LeftArrowAction;
-            uiController.rightArrowAct.performed -= RightArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
+            uiControl.leftArrowAct.performed -= LeftArrowAction;
+            uiControl.rightArrowAct.performed -= RightArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
         }
 
         private void LeftArrowAction(InputAction.CallbackContext context)
         {
-            uiController.confirmCheck.ChangeForcus(-1);
+            uiControl.confirmCheck.ChangeForcus(-1);
         }
 
         private void RightArrowAction(InputAction.CallbackContext context)
         {
-            uiController.confirmCheck.ChangeForcus(1);
+            uiControl.confirmCheck.ChangeForcus(1);
         }
 
         private void ConfirmAction(InputAction.CallbackContext context)
         {
             //Yesを選択していたらミッションシーンに遷移
-            if (uiController.confirmCheck.isConfirm)
+            if (uiControl.confirmCheck.isConfirm)
             {
-                uiController.CallStateFuncArg("SelectMission", new object[1] { uiController.missionScrollView.forcusInfo.missionData.sceneName });
-
+                SelectMission(uiControl.missionScrollView.forcusInfo.missionData.sceneName);
             }
             else
             {
-                uiController.confirmCheck.CloseWindow();
-                uiController.StateTranstion(MissionSelectStateEnum.SelectMission);
+                uiControl.confirmCheck.CloseWindow();
+                uiControl.StateTranstion(MissionSelectStateEnum.SelectMission);
             }
+        }
+
+        public void SelectMission(string missionSceneName)
+        {
+            uiControl.curtainCanvas.gameObject.SetActive(true);
+            uiControl.curtainCanvas.DOFade(1f, 1f).OnComplete(() =>
+            {
+                uiControl.leftArrowAct.performed -= LeftArrowAction;
+                uiControl.rightArrowAct.performed -= RightArrowAction;
+                uiControl.confirmAct.performed -= ConfirmAction;
+
+                SceneChangeManager.instance.StartCoroutine("SceneTransition", missionSceneName);
+            });
         }
     }
 
     private List<MissionSelectState> States = new List<MissionSelectState>();
 
-    private MissionSelectState nowState;
+    private MissionSelectState nowState,beforeState;
 
     public RectTransform selectArrowRect;
 
@@ -190,7 +193,12 @@ public class MissionSelectUIController : MonoBehaviour
     public MissionStatusUI missionStatus;
     public ConfirmCheckUI confirmCheck;
 
-    public InputAction upArrowAct, downArrowAct,leftArrowAct,rightArrowAct, confirmAct,canselAct;
+    public CanvasGroup curtainCanvas;
+
+    [SerializeField]
+    private DockImageTransition transitionManager;
+
+    public InputAction upArrowAct, downArrowAct,leftArrowAct,rightArrowAct, confirmAct,cancelAct;
 
     // Start is called before the first frame update
     void Start()
@@ -203,14 +211,14 @@ public class MissionSelectUIController : MonoBehaviour
         leftArrowAct = testControl.UI.LeftArrow;
         rightArrowAct = testControl.UI.RightArrow;
         confirmAct = testControl.UI.Confirm;
-        canselAct = testControl.UI.Cansel;
+        cancelAct = testControl.UI.Cancel;
 
         upArrowAct.Enable();
         downArrowAct.Enable();
         leftArrowAct.Enable();
         rightArrowAct.Enable(); 
         confirmAct.Enable();
-        canselAct.Enable();
+        cancelAct.Enable();
 
         States.Add(new WaitState(this));
         States.Add(new SelectMissionState(this));
@@ -219,8 +227,6 @@ public class MissionSelectUIController : MonoBehaviour
         nowState = States[0];
 
         nowState.OnEnter();
-
-        gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -235,11 +241,12 @@ public class MissionSelectUIController : MonoBehaviour
     {
         nowState.OnExit();
 
-        MissionSelectState newState = States.First(state => state.State == transitState);
+        MissionSelectState newState = States.First(state => state.state == transitState);
 
         //ヌルチェ
         if (newState == null) throw new System.Exception("遷移するステートがないらしいよ");
 
+        beforeState = nowState;
         nowState = newState;
 
         nowState.OnEnter();
@@ -270,9 +277,9 @@ public abstract class MissionSelectState : IState
         ConfirmCheck,
     }
 
-    public MissionSelectStateEnum State;
+    public MissionSelectStateEnum state;
 
-    protected MissionSelectUIController uiController;
+    protected MissionSelectUIController uiControl;
 
     //呼べる関数をまとめるDictionary
     protected Dictionary<string, Action> actionDic;

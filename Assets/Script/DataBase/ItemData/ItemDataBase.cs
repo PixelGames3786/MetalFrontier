@@ -12,7 +12,14 @@ public class ItemDataBase : ScriptableObject
     //アイテム番号からアイテムを取得
     public ItemData GetItem(int itemNum)
     {
-        return itemDataList.FirstOrDefault(item => item.ItemNumber == itemNum);
+        ItemData item = itemDataList.FirstOrDefault(item => item.ItemNumber == itemNum);
+
+        if (item==null)
+        {
+            Debug.Log($"{itemNum}番のアイテムが見つからなかった……");
+        }
+
+        return item;
     }
 
     //アイテム番号のリストからアイテムのリストに変換

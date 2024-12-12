@@ -13,12 +13,20 @@ MonoBehaviour:
   m_Name: GatlingGun01
   m_EditorClassIdentifier: 
   ItemNumber: 503
+  itemType: 1
   price: 0
   itemName: "\u30AC\u30C8\u30EA\u30F3\u30B001"
   Description: "\u306A\u3057"
   setType: 1
   weaponType: 0
   attackType: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
+  bulletSpeed: 80
+  damage: 10
+  shotBlur: 0.1
+  useInterval: 0.1
+  defaultBullet: 100
   setPosiWithPrefab:
     _list:
     - key: 0

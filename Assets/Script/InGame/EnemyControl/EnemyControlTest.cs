@@ -13,6 +13,7 @@ public class EnemyControlTest : MonoBehaviour,IDamageable,ITargetable
     //ステート管理類
     private List<EnemyTestState> states = new List<EnemyTestState>();
 
+    public EnemyTestState beforeState;
     private EnemyTestState nowState;
 
     public List<BodyPartsData> bodyPartsDatas = new List<BodyPartsData>();
@@ -41,6 +42,7 @@ public class EnemyControlTest : MonoBehaviour,IDamageable,ITargetable
         states.Add(new FindTargetState(this));
         states.Add(new ChaseState(this));
         states.Add(new ShotState(this));
+        states.Add(new AvoidObstacleState(this));
 
         nowState = states[0];
 
@@ -73,6 +75,7 @@ public class EnemyControlTest : MonoBehaviour,IDamageable,ITargetable
         //ヌルチェ
         if (newState == null) throw new System.Exception("遷移するステートがないらしいよ");
 
+        beforeState = nowState;
         nowState = newState;
 
         nowState.OnEnter();
@@ -140,6 +143,7 @@ public class EnemyControlTest : MonoBehaviour,IDamageable,ITargetable
 
         SetWorking(false);
         SetOparete(false);
+        controller.SetArmLookAt(false);
 
         nowState.OnDie();
 
@@ -196,6 +200,8 @@ public class EnemyControlTest : MonoBehaviour,IDamageable,ITargetable
     {
         foreach (MeshRenderer renderer in allMeshes)
         {
+            if(renderer.gameObject.layer==LayerMask.NameToLayer("MiniMap")) continue;
+
             if (renderer.isVisible)
             {
                 return true;
@@ -218,7 +224,8 @@ public abstract class EnemyTestState : IState
     {
         FindTarget,
         Chase,
-        Shot
+        Shot,
+        AvoidObstacle,
     }
 
     public StateEnum stateEnum;
@@ -320,6 +327,13 @@ public class FindTargetState : EnemyTestState
 //プレイヤーと一定距離を保つステート
 public class ChaseState : EnemyTestState
 {
+    private float leftArmWaitTime = 1f;
+    private float leftArmElapsedTime = 0f;
+
+    //同じところにはまっていないかどうか確認するための変数
+    private Vector3 nowPosition;
+    private float stuckTime; //動いていない時間
+
     //コンストラクタ　初期化
     public ChaseState(EnemyControlTest control)
     {
@@ -329,39 +343,142 @@ public class ChaseState : EnemyTestState
         controller = enemyAI.controller;
     }
 
+    public override void OnEnter()
+    {
+        nowPosition= enemyAI.transform.position;
+    }
+
     public override void OnUpdate()
     {
+        KeepDistance();
+        UseWeapon();
+        CheckStuck();
+    }
+
+    private void UseWeapon()
+    {
+        leftArmElapsedTime+= Time.deltaTime;
+
+        if (leftArmElapsedTime>=leftArmWaitTime)
+        {
+            enemyAI.controller.LeftArmShot();
+            leftArmElapsedTime = 0f;
+        }
+    }
+
+    private void KeepDistance()
+    {
         //ターゲットとの距離を計算
-        float distance = Vector3.Distance(enemyAI.transform.position,enemyAI.target.position);
-        float elevation = enemyAI.target.position.y-enemyAI.transform.position.y;
+        float distance = Vector3.Distance(enemyAI.transform.position, enemyAI.target.position);
+        float elevation = enemyAI.target.position.y - enemyAI.transform.position.y;
+
+        Vector3 toTargetDir = (enemyAI.target.position - enemyAI.transform.position).normalized;
+        Vector3 localDir = enemyAI.transform.InverseTransformDirection(toTargetDir);
+
+        //Debug.Log(distance);
 
         //もしも一定距離以上離れていたらベクトルを取り近づく
-        if (distance>enemyAI.enemyMaxDis)
+        if (distance > enemyAI.enemyMaxDis)
         {
-            Vector3 toTargetVec = (enemyAI.target.position - enemyAI.transform.position).normalized;
-
             //XYの入力
-            controller.moveDirInput(new Vector2(toTargetVec.x,toTargetVec.z));
+            controller.moveDirInput(new Vector2(localDir.x, localDir.z));
         }
-
         //もしも一定距離以上近づいたらベクトルを取り離れる
-        if (distance < enemyAI.enemyMinDis)
+        else if (distance < enemyAI.enemyMinDis)
         {
-            Vector3 toTargetVec = (enemyAI.transform.position- enemyAI.target.position).normalized;
-
             //XYの入力
-            controller.moveDirInput(new Vector2(toTargetVec.x, toTargetVec.z));
+            controller.moveDirInput(new Vector2(localDir.x*-1, localDir.z * -1));
+        }
+        else
+        {
+            //XYの入力
+            controller.moveDirInput(Vector2.zero);
         }
 
 
         //もしも一定以上高低差があったら空を飛ぶ
-        if (elevation>enemyAI.enemyMinElevation)
+        if (elevation > enemyAI.enemyMinElevation)
         {
             controller.StartRise();
         }
         else
         {
             controller.EndRise();
+        }
+    }
+
+    private void CheckStuck()
+    {
+        Vector3 newPosition = enemyAI.transform.position;
+
+        if (Vector3DiffersByOne(nowPosition,newPosition))
+        {
+            nowPosition = newPosition;
+
+            stuckTime = 0;
+        }
+        else
+        {
+            stuckTime += Time.deltaTime;
+
+            if (stuckTime>=5f)
+            {
+                stuckTime = 0;
+                enemyAI.StateTranstion(StateEnum.AvoidObstacle);
+            }
+        }
+    }
+    bool Vector3DiffersByOne(Vector3 a, Vector3 b) //Vector3のどれかの値が1f以上異なっていたらtrueを返す
+    {
+        return Mathf.Abs(a.x - b.x) >= 1.0f ||
+               Mathf.Abs(a.y - b.y) >= 1.0f ||
+               Mathf.Abs(a.z - b.z) >= 1.0f;
+    }
+
+}
+
+//障害物を回避するステート　ランダムの方向に一定時間動き元のステートに戻る
+public class AvoidObstacleState : EnemyTestState
+{
+    private float maxMoveTime=3f, minMoveTime=10f;
+    private float moveTime = 0f;
+    private float moveElapsedTime = 0f;
+
+    private float moveXDir, moveYDir;
+
+    //コンストラクタ　初期化
+    public AvoidObstacleState(EnemyControlTest control)
+    {
+        stateEnum = StateEnum.AvoidObstacle;
+
+        enemyAI = control;
+        controller = enemyAI.controller;
+    }
+
+    public override void OnEnter()
+    {
+        moveTime = UnityEngine.Random.Range(minMoveTime, maxMoveTime);
+        moveXDir = UnityEngine.Random.Range(-1f,1f);
+        moveYDir = UnityEngine.Random.Range(-1f,1f);
+    }
+
+    public override void OnUpdate()
+    {
+        Move();
+    }
+
+    private void Move()
+    {
+        //XYの入力
+        controller.moveDirInput(new Vector2(moveXDir, moveYDir));
+
+        moveElapsedTime += Time.deltaTime;
+
+        if (moveElapsedTime>moveTime)
+        {
+            moveElapsedTime = 0;
+
+            enemyAI.StateTranstion(enemyAI.beforeState.stateEnum);
         }
     }
 

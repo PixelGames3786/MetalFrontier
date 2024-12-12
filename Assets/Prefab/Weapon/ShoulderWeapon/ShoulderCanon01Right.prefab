@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bb019d6a7d3f9d41898b608e989c3ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  itemNum: 506
   weaponData: {fileID: 11400000, guid: 39fb641b47e26704e85fe1a57899a516, type: 2}
   useInterval: 1
   intervalWaitTime: 0
@@ -64,7 +65,11 @@ MonoBehaviour:
     beamRes: 0
     maxVel: {x: 0, y: 0, z: 0}
     boostMaxVel: {x: 0, y: 0, z: 0}
+    quorraAmount: 400
+    quorraUseRate: 4
+    quorraRecoverRate: 2
   weaponPosition: 0
+  controller: {fileID: 0}
   bulletReloadTime: 0
   mainUnitCollider: {fileID: 7968979158518453565}
   BulletPrefab: {fileID: 4779404370962800624, guid: 906bdac905e2bf144b9f63616de609fa,

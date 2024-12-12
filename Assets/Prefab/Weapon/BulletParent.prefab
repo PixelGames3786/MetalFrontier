@@ -137,4 +137,4 @@ MonoBehaviour:
   lifeTime: 5
   attackData:
     type: 0
-    damage: 1000
+    damage: 10

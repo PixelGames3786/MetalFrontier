@@ -9,6 +9,9 @@ using Cinemachine;
 using Cysharp.Threading.Tasks;
 using System;
 using System.Linq;
+using UnityEngine.Rendering;
+using DG.Tweening;
+using UnityEngine.Rendering.Universal;
 
 public class RobotPlayerInput : MonoBehaviour,IDamageable
 {
@@ -58,10 +61,17 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     //ミッション範囲外に出た際のカウントダウン　10秒外にいるとミッション失敗
     private bool IsOutOfArea;
     private int maxOutOfAreaCount=20,outOfAreaCount;
-    private Coroutine countdownCoroutine; // コルーチンの参照を保持
+    private Coroutine countdownCoroutine; //コルーチンの参照を保持
 
     //装備を獲得可能なソース
     public HackSlashSource hackSource { get; private set; }
+
+    public GameObject awakeParticleParent;
+    public ParticleSystem awakeParticlePrefab;
+
+    private List<ParticleSystem> awakeParticles=new List<ParticleSystem>();
+
+    public Volume postProcessVolume; //ポストプロセスのVolume
 
 
     // Start is called before the first frame update
@@ -75,6 +85,8 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         RegisterAction();
 
         InputControls testControl = new InputControls();
+
+        controller.onStartBoost += StartBoostEffect;
     }
 
     private void Start()
@@ -88,6 +100,9 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         camFrontVector = lookPosi;
 
         lookObj = new GameObject("LookObject").transform;
+
+        AwakeParticleSetUp();
+
     }
 
     // Update is called once per frame
@@ -106,8 +121,12 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
 
         //RotateToTarget(inputVec);
 
-        LookToCameraPoint();
+        foreach (Transform trans in targets)
+        {
+            Debug.DrawLine(transform.position, trans.position, Color.red);
+        }
 
+        LookToCameraPoint();
 
         //武器を長押し中なら
         if (IsLArmLongPress) controller.LeftArmShot();
@@ -137,17 +156,30 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
                 }
 
                 //既にターゲッティングしていないかつ現在ターゲッティング可能ならばターゲッティングする
-                if (!targets.Contains(hit.transform) && targetable.CanTarget())
+                if (!targets.Contains(hit.transform) && targetable.CanTarget() && !CheckObstacle(hit.transform))
                 {
                     targets.Add(hit.transform);
+                    uiController.SetRockOnUI(targets);
                 }
-
-                //enemiesInRange.Add(hit.collider.transform);
             }
         }
 
         //TargetCam.LookAt = mostNearEnemy.transform;
         //TargetCam.Priority = 11;
+    }
+
+    //ターゲッティング可能かどうかチェックする　壁などに遮られていたらターゲッティングできないようにする
+    private bool CheckObstacle(Transform tag)
+    {
+        LayerMask obstacleLayer = LayerMask.GetMask("Field");
+        bool isObstacle = Physics.Linecast(transform.position, tag.position, out RaycastHit hit, obstacleLayer);
+
+        if (isObstacle)
+        {
+            //print(hit.collider.name);
+        }
+
+        return isObstacle;
     }
 
     //ロックオンした敵が範囲外に出たらロックオンを外す
@@ -172,6 +204,13 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
                 continue;
             }
 
+            //間に障害物があれば外す
+            if (CheckObstacle(enemy.transform))
+            {
+                removeList.Add(enemy);
+                continue;
+            }
+
             float distance = Vector3.Distance(transform.position, enemy.transform.position);
 
             if (distance>enemyRockOffRadius)
@@ -179,6 +218,8 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
                 removeList.Add(enemy);
             }
         }
+
+        if (removeList.Count == 0) return;
 
         foreach (Transform remove in removeList)
         {
@@ -277,6 +318,39 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         controller.statusControl.StatusInitalize(bodyParts);
 
         uiController.UIInitlaize(controller.statusControl);
+    }
+
+    //覚醒パーティクルのセットアップ
+    private void AwakeParticleSetUp()
+    {
+        MeshRenderer[] meshRenderers = transform.GetComponentsInChildren<MeshRenderer>();
+
+        foreach (MeshRenderer renderer in meshRenderers)
+        {
+            ParticleSystem particle = Instantiate(awakeParticlePrefab, awakeParticleParent.transform);
+            awakeParticles.Add(particle);
+
+            particle.Stop();
+
+            var shapeModule = particle.shape;
+
+            shapeModule.meshRenderer = renderer;
+        }
+
+        controller.onAwakeStart += () =>
+        {
+            foreach (var particle in awakeParticles)
+            {
+                particle.Play();
+            }
+        };
+        controller.onAwakeEnd += () => 
+        {
+            foreach (var particle in awakeParticles)
+            {
+                particle.Stop();
+            }
+        };
     }
 
     //動作状態を変更
@@ -381,11 +455,39 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         }
     }
 
+    //ブーストを始める際にポストエフェクトをかける
+    private void StartBoostEffect()
+    {
+        ChromaticAberration chroma;
+
+        //VolumeからChromaticを取得
+        if (postProcessVolume.profile.TryGet(out chroma))
+        {
+            Sequence sequence = DOTween.Sequence();
+
+            //DOTweenでBloomのintensityを変更
+            Tween startTween= DOTween.To(() => chroma.intensity.value,
+                       x => chroma.intensity.value = x,
+                       0.7f,
+                       0.3f);
+
+            Tween endTween = DOTween.To(() => chroma.intensity.value,
+                       x => chroma.intensity.value = x,
+                       0f,
+                       0.3f);
+
+            sequence.Append(startTween).Append(endTween);
+
+            sequence.Play();
+        }
+    }
+
     //死亡処理
     private void Die()
     {
         SetWorking(false);
         SetOparete(false);
+        controller.SetArmLookAt(false);
 
         //デリゲートの呼び出し
         OnDeathWithName?.Invoke(gameObject.name);

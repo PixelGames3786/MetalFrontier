@@ -3,16 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[CreateAssetMenu(fileName = "ModuleData", menuName = "Data/CreateModule")]
-public class ModuleData : ScriptableObject
+[CreateAssetMenu(fileName = "ModuleData", menuName = "PartsData/CreateModule")]
+public class ModuleData : ItemData
 {
-    //通し番号
-    public int moduleNumber;
+    public enum ModuleSetType
+    {
+        Body,
+        Weapon,
+    }
 
-    public int price; //販売価格
+    public enum ModuleEffectType
+    {
+        AttackUp,
+    }
 
-    public string moduleName;
+    public ModuleSetType setType;
 
-    [TextArea]
-    public string description;
+    public int useSlotNum; //スロットを何枠使用するのか
+
+    public List<ModuleEffectType> effectTypes = new List<ModuleEffectType>();
+    public List<float> effectPowers= new List<float>();
 }

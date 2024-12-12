@@ -37,12 +37,6 @@ public class CustomRobotController : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     //セーブデータのパーツ構成を本体に反映
     public void PartsSetReflect()
     {

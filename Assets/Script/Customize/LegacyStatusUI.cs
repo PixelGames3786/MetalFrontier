@@ -3,9 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using static BodyPartsData;
 
 public class LegacyStatusUI : MonoBehaviour
 {
+    public enum StatusUIEnum
+    {
+        Hide,
+        Normal,
+    }
+
     [SerializeField]
     private TextMeshProUGUI maxHpText, moveSpeedText, boostSpeedText, jumpForceText, riseForceText;
 
@@ -15,7 +22,17 @@ public class LegacyStatusUI : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI physicResText, beamResText, shotAccuracyText;
 
-    private LegacySpecStatus status;
+    [SerializeField]
+    private List<TextMeshProUGUI> oldStatusTexts,nowStatusTexts;
+
+    private LegacySpecStatus nowStatus,newStatus;
+
+    private bool isCustomize;
+
+    private StatusUIEnum nowState;
+
+    [SerializeField]
+    private GameObject oldStatusParent, arrowParent;
 
     // Start is called before the first frame update
     void Start()
@@ -29,47 +46,166 @@ public class LegacyStatusUI : MonoBehaviour
         
     }
 
+    public void ChangeNextState()
+    {
+        nowState=nowState.Next();
+
+        switch (nowState)
+        {
+            case StatusUIEnum.Hide:
+
+                gameObject.SetActive(false);
+
+                break;
+
+            case StatusUIEnum.Normal:
+
+                gameObject.SetActive(true);
+                NowStatusInitialize();
+
+                break;
+        }
+    }
+
+    public void ChangeCustomize()
+    {
+        isCustomize = !isCustomize;
+
+        if (isCustomize)
+        {
+            oldStatusParent.SetActive(true);
+            arrowParent.SetActive(true);
+        }
+        else
+        {
+            oldStatusParent.SetActive(false);
+            arrowParent.SetActive(false);
+        }
+    }
+
     public void UIInitialize()
     {
-        maxHpText.text = status.maxHP.ToString();
-        moveSpeedText.text=status.moveSpeed.ToString();
-        boostSpeedText.text=status.boostSpeed.ToString();
-        jumpForceText.text=status.jumpForce.ToString();
-        riseForceText.text=status.riseForce.ToString();
-        boostAmountText.text=status.boostAmount.ToString();
-        useRateText.text=status.boostUseRate.ToString();
-        recoverRateText.text=status.boostRecoverRate.ToString();
-        physicResText.text=status.physicalRes.ToString();
-        beamResText.text=status.beamRes.ToString();
-        shotAccuracyText.text=status.shotAccuracy.ToString();
+        if (isCustomize)
+        {
+            maxHpText.text = newStatus.maxHP.ToString();
+            moveSpeedText.text = newStatus.moveSpeed.ToString();
+            boostSpeedText.text = newStatus.boostSpeed.ToString();
+            jumpForceText.text = newStatus.jumpForce.ToString();
+            riseForceText.text = newStatus.riseForce.ToString();
+            boostAmountText.text = newStatus.boostAmount.ToString();
+            useRateText.text = newStatus.boostUseRate.ToString();
+            recoverRateText.text = newStatus.boostRecoverRate.ToString();
+            physicResText.text = newStatus.physicalRes.ToString();
+            beamResText.text = newStatus.beamRes.ToString();
+            shotAccuracyText.text = newStatus.shotAccuracy.ToString();
+
+            oldStatusTexts[0].text = nowStatus.maxHP.ToString();
+            oldStatusTexts[1].text = nowStatus.moveSpeed.ToString();
+            oldStatusTexts[2].text = nowStatus.boostSpeed.ToString();
+            oldStatusTexts[3].text = nowStatus.jumpForce.ToString();
+            oldStatusTexts[4].text = nowStatus.riseForce.ToString();
+            oldStatusTexts[5].text = nowStatus.boostAmount.ToString();
+            oldStatusTexts[6].text = nowStatus.boostUseRate.ToString();
+            oldStatusTexts[7].text = nowStatus.boostRecoverRate.ToString();
+            oldStatusTexts[8].text = nowStatus.physicalRes.ToString();
+            oldStatusTexts[9].text = nowStatus.beamRes.ToString();
+            oldStatusTexts[10].text = nowStatus.shotAccuracy.ToString();
+        }
+        else 
+        {
+            maxHpText.text = nowStatus.maxHP.ToString();
+            moveSpeedText.text = nowStatus.moveSpeed.ToString();
+            boostSpeedText.text = nowStatus.boostSpeed.ToString();
+            jumpForceText.text = nowStatus.jumpForce.ToString();
+            riseForceText.text = nowStatus.riseForce.ToString();
+            boostAmountText.text = nowStatus.boostAmount.ToString();
+            useRateText.text = nowStatus.boostUseRate.ToString();
+            recoverRateText.text = nowStatus.boostRecoverRate.ToString();
+            physicResText.text = nowStatus.physicalRes.ToString();
+            beamResText.text = nowStatus.beamRes.ToString();
+            shotAccuracyText.text = nowStatus.shotAccuracy.ToString();
+        }
     }
 
     //装備パーツからステータスを算出
-    public void StatusInitialize(List<BodyPartsData> bodyParts)
+    public void NowStatusInitialize()
     {
-        status = new LegacySpecStatus();
+        //データ取得
+        LegacySettingData settingData = SaveDataManager.instance.saveData.settingData;
+
+        //ボディパーツ反映
+        List<BodyPartsData> bodyParts = new List<BodyPartsData>();
+        Dictionary<LegacySettingData.WeaponSetPosi, WeaponPartsData> weaponParts = new Dictionary<LegacySettingData.WeaponSetPosi, WeaponPartsData>();
+
+        //全パーツのデータ取得
+        foreach (KeyValuePair<BodyPartsData.PartsType, HavingItem> keyValue in settingData.PartsNumber)
+        {
+            BodyPartsData Data = (BodyPartsData)keyValue.Value.itemData;
+            bodyParts.Add(Data);
+        }
+
+        nowStatus = new LegacySpecStatus();
 
         foreach (BodyPartsData data in bodyParts)
         {
-            status.maxHP += data.hpFactor;
+            nowStatus.maxHP += data.hpFactor;
 
-            status.moveSpeed += data.moveSpeed;
-            status.boostSpeed += data.boostSpeed;
+            nowStatus.moveSpeed += data.moveSpeed;
+            nowStatus.boostSpeed += data.boostSpeed;
 
-            status.jumpForce += data.jumpForce;
-            status.riseForce += data.riseForce;
+            nowStatus.jumpForce += data.jumpForce;
+            nowStatus.riseForce += data.riseForce;
 
-            status.boostAmount += data.boostAmout;
-            status.boostUseRate += data.boostUseRate;
-            status.boostRecoverRate += data.boostRecoverRate;
+            nowStatus.boostAmount += data.boostAmout;
+            nowStatus.boostUseRate += data.boostUseRate;
+            nowStatus.boostRecoverRate += data.boostRecoverRate;
 
-            status.maxVel += data.maxVel;
-            status.boostMaxVel += data.boostMaxVel;
+            nowStatus.maxVel += data.maxVel;
+            nowStatus.boostMaxVel += data.boostMaxVel;
 
-            status.physicalRes += data.physicalRes;
-            status.beamRes += data.beamRes;
+            nowStatus.physicalRes += data.physicalRes;
+            nowStatus.beamRes += data.beamRes;
 
-            status.shotAccuracy += data.shotAccuracy;
+            nowStatus.shotAccuracy += data.shotAccuracy;
+        }
+    }
+
+    //装備パーツからステータスを算出
+    public void NewStatusInitialize(Dictionary<PartsType, HavingItem> partsDic)
+    {
+        //ボディパーツ反映
+        List<BodyPartsData> bodyParts=new List<BodyPartsData>();
+
+        //全パーツのデータ取得
+        foreach (KeyValuePair<PartsType, HavingItem> keyValue in partsDic)
+        {
+            BodyPartsData Data = (BodyPartsData)keyValue.Value.itemData;
+            bodyParts.Add(Data);
+        }
+
+        newStatus = new LegacySpecStatus();
+
+        foreach (BodyPartsData data in bodyParts)
+        {
+            newStatus.maxHP += data.hpFactor;
+
+            newStatus.moveSpeed += data.moveSpeed;
+            newStatus.boostSpeed += data.boostSpeed;
+
+            newStatus.jumpForce += data.jumpForce;
+            newStatus.riseForce += data.riseForce;
+
+            newStatus.boostAmount += data.boostAmout;
+            newStatus.boostUseRate += data.boostUseRate;
+            newStatus.boostRecoverRate += data.boostRecoverRate;
+
+            newStatus.maxVel += data.maxVel;
+            newStatus.boostMaxVel += data.boostMaxVel;
+
+            newStatus.physicalRes += data.physicalRes;
+            newStatus.beamRes += data.beamRes;
+
+            newStatus.shotAccuracy += data.shotAccuracy;
         }
     }
 }

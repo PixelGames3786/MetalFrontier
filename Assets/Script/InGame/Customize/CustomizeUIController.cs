@@ -7,6 +7,7 @@ using System;
 using DG.Tweening;
 using UnityEngine.InputSystem;
 using static ShopControllerState;
+using TMPro;
 
 public class CustomizeUIController : MonoBehaviour
 {
@@ -20,16 +21,7 @@ public class CustomizeUIController : MonoBehaviour
         {
             state = CustomizeUIState.SetUp;
 
-            uiController = controller;
-
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
-
+            uiControl = controller;
         }
 
         //ステートに入った際に、セットアップを行う
@@ -50,12 +42,12 @@ public class CustomizeUIController : MonoBehaviour
         private void SetUp()
         {
             //自レガシーオブジェクト生成
-            GameObject legacyObj = Instantiate(uiController.legacyCustomPrefab);
-            uiController.robotControl = legacyObj.GetComponent<CustomRobotController>();
+            GameObject legacyObj = Instantiate(uiControl.legacyCustomPrefab);
+            uiControl.robotControl = legacyObj.GetComponent<CustomRobotController>();
 
-            uiController.robotControl.PartsSetReflect();
+            uiControl.robotControl.PartsSetReflect();
 
-            uiController.StateTranstion(CustomizeUIState.SelectMenu);
+            uiControl.StateTranstion(CustomizeUIState.Wait);
         }
     }
 
@@ -66,15 +58,7 @@ public class CustomizeUIController : MonoBehaviour
         {
             state = CustomizeUIState.Wait;
 
-            uiController = controller;
-
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
+            uiControl = controller;
         }
 
         //ステートに入った際に、セットアップを行う
@@ -102,40 +86,64 @@ public class CustomizeUIController : MonoBehaviour
         {
             state = CustomizeUIState.SelectMenu;
 
-            uiController = controller;
+            uiControl = controller;
 
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
-
-            arrowDefaultYPosi = uiController.selectArrowRect.localPosition.y;
+            arrowDefaultYPosi = uiControl.genreSelectArrowRect.localPosition.y;
         }
 
         public override void OnEnter()
         {
-            uiController.GetComponent<CanvasGroup>().DOFade(1f, 0.5f);
-
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
+            //UIが滑らかにフェードインする
+            Vector2 arrowPosi = uiControl.genreSelectArrowRect.localPosition;
             arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
 
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            uiControl.genreSelectArrowRect.localPosition = arrowPosi;
 
-            uiController.upArrowAct.performed += UpArrowAction;
-            uiController.downArrowAct.performed += DownArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
-            uiController.canselAct.performed += CanselAction;
+            /*
+
+            uiControl.genreSelectArrowRect.GetComponent<TextMeshProUGUI>().DOFade(1f,0.3f);
+
+            RectTransform[] menuChildRect= uiControl.selectMenuParent.GetComponentsInChildren<RectTransform>();
+
+            for (int i = 1; i < menuChildRect.Length; i++)
+            {
+                menuChildRect[i].localPosition = new Vector2(-700f, menuChildRect[i].localPosition.y);
+                menuChildRect[i].DOLocalMoveX(-813f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
+                menuChildRect[i].GetComponent<TextMeshProUGUI>().DOFade(1f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
+            }*/
+
+            uiControl.transitionManager.onTransitionComplete += InputActionRegister;
         }
 
         public override void OnExit()
         {
-            uiController.upArrowAct.performed -= UpArrowAction;
-            uiController.downArrowAct.performed -= DownArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
-            uiController.canselAct.performed-= CanselAction;
+            //UIが滑らかにフェードアウトする
+            /*
+            uiControl.genreSelectArrowRect.GetComponent<TextMeshProUGUI>().DOFade(0f, 0.3f);
+
+            RectTransform[] menuChildRect = uiControl.selectMenuParent.GetComponentsInChildren<RectTransform>();
+
+            for (int i = 1; i < menuChildRect.Length; i++)
+            {
+                menuChildRect[i].localPosition = new Vector2(-813f, menuChildRect[i].localPosition.y);
+                menuChildRect[i].DOLocalMoveX(-900f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
+                menuChildRect[i].GetComponent<TextMeshProUGUI>().DOFade(0f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
+            }*/
+
+            uiControl.transitionManager.onTransitionComplete -= InputActionRegister;
+
+            uiControl.upArrowAct.performed -= UpArrowAction;
+            uiControl.downArrowAct.performed -= DownArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
+            uiControl.cancelAct.performed-= CanselAction;
+        }
+
+        private void InputActionRegister()
+        {
+            uiControl.upArrowAct.performed += UpArrowAction;
+            uiControl.downArrowAct.performed += DownArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
+            uiControl.cancelAct.performed += CanselAction;
         }
 
         public void UpArrowAction(InputAction.CallbackContext context)
@@ -144,11 +152,11 @@ public class CustomizeUIController : MonoBehaviour
 
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
+            Vector2 arrowPosi = uiControl.genreSelectArrowRect.localPosition;
 
             arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
 
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            uiControl.genreSelectArrowRect.localPosition = arrowPosi;
         }
 
         public void DownArrowAction(InputAction.CallbackContext context)
@@ -157,11 +165,11 @@ public class CustomizeUIController : MonoBehaviour
 
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
+            Vector2 arrowPosi = uiControl.genreSelectArrowRect.localPosition;
 
             arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
 
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            uiControl.genreSelectArrowRect.localPosition = arrowPosi;
         }
 
         private void ConfirmAction(InputAction.CallbackContext context) //確定
@@ -173,13 +181,15 @@ public class CustomizeUIController : MonoBehaviour
             {
                 case MenuState.Body:
 
-                    uiController.StateTranstion(CustomizeUIState.SelectBodyMenu);
+                    uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomGenre,DockImageTransition.MenuType.CustomPartsType);
+                    uiControl.StateTranstion(CustomizeUIState.SelectBodyMenu);
 
                     break;
 
                 case MenuState.Weapon:
 
-                    uiController.StateTranstion(CustomizeUIState.SelectWeaponMenu);
+                    uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomPartsType);
+                    uiControl.StateTranstion(CustomizeUIState.SelectWeaponMenu);
 
                     break;
             }
@@ -187,10 +197,9 @@ public class CustomizeUIController : MonoBehaviour
 
         public void CanselAction(InputAction.CallbackContext context)
         {
-            uiController.StateTranstion(CustomizeUIState.Wait);
-            uiController.mainMenuControl.StateTranstion(MainMenuState.MainMenuStateEnum.SelectMenu);
-
-            uiController.GetComponent<CanvasGroup>().DOFade(0f, 0.5f);
+            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.Terminal,DockImageTransition.MenuType.CustomGenre);
+            uiControl.StateTranstion(CustomizeUIState.Wait);
+            uiControl.mainMenuControl.StateTranstion(MainMenuState.MainMenuStateEnum.SelectMenu);
         }
     }
 
@@ -206,67 +215,82 @@ public class CustomizeUIController : MonoBehaviour
         {
             state = CustomizeUIState.SelectBodyMenu;
 
-            uiController = controller;
+            uiControl = controller;
 
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
-
-            arrowDefaultYPosi = uiController.selectArrowRect.localPosition.y;
+            arrowDefaultYPosi = uiControl.typeSelectArrowRect.localPosition.y;
         }
 
         public override void OnEnter()
         {
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
+            //UIが滑らかにフェードインする
+            Vector2 arrowPosi = uiControl.typeSelectArrowRect.localPosition;
             arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
 
-            uiController.selectArrowRect.localPosition=arrowPosi;
+            uiControl.typeSelectArrowRect.localPosition = arrowPosi;
 
-            uiController.bodyMenuParent.gameObject.SetActive(true);
-            uiController.selectMenuParent.gameObject.SetActive(false);
+            //uiController.typeSelectArrowRect.GetComponent<TextMeshProUGUI>().DOFade(1f, 0.3f);
 
-            uiController.upArrowAct.performed += UpArrowAction;
-            uiController.downArrowAct.performed += DownArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
-            uiController.canselAct.performed += CanselAction;
+            uiControl.bodyMenuParent.gameObject.SetActive(true);
+            uiControl.weaponMenuParent.gameObject.SetActive(false);
+
+            /*
+            RectTransform[] menuChildRect = uiControl.bodyMenuParent.GetComponentsInChildren<RectTransform>();
+
+            for (int i = 1; i < menuChildRect.Length; i++)
+            {
+                menuChildRect[i].localPosition = new Vector2(-700f, menuChildRect[i].localPosition.y);
+                menuChildRect[i].DOLocalMoveX(-813f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
+                menuChildRect[i].GetComponent<TextMeshProUGUI>().DOFade(1f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
+            }*/
+
+            uiControl.transitionManager.onTransitionComplete += InputActionRegister;
+        }
+
+        private void InputActionRegister()
+        {
+            uiControl.upArrowAct.performed += UpArrowAction;
+            uiControl.downArrowAct.performed += DownArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
+            uiControl.cancelAct.performed += CanselAction;
         }
 
         public override void OnExit()
         {
-            uiController.upArrowAct.performed -= UpArrowAction;
-            uiController.downArrowAct.performed -= DownArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
-            uiController.canselAct.performed -= CanselAction;
+            //UIが滑らかにフェードアウトする
+            //uiController.typeSelectArrowRect.GetComponent<TextMeshProUGUI>().DOFade(0f, 0.3f);
+
+            /*
+            RectTransform[] menuChildRect = uiControl.bodyMenuParent.GetComponentsInChildren<RectTransform>();
+
+            for (int i = 1; i < menuChildRect.Length; i++)
+            {
+                menuChildRect[i].localPosition = new Vector2(-813f, menuChildRect[i].localPosition.y);
+                menuChildRect[i].DOLocalMoveX(-900f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
+                menuChildRect[i].GetComponent<TextMeshProUGUI>().DOFade(0f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
+            }*/
+
+            uiControl.transitionManager.onTransitionComplete -= InputActionRegister;
+
+            uiControl.upArrowAct.performed -= UpArrowAction;
+            uiControl.downArrowAct.performed -= DownArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
+            uiControl.cancelAct.performed -= CanselAction;
         }
 
         public void UpArrowAction(InputAction.CallbackContext context)
         {
             nowSelectNum--;
-
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
-
-            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
-
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            ChangeArrowPosition();
         }
 
         public void DownArrowAction(InputAction.CallbackContext context)
         {
             nowSelectNum++;
-
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
-
-            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
-
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            ChangeArrowPosition();
         }
 
         private void ConfirmAction(InputAction.CallbackContext context) //確定
@@ -279,39 +303,49 @@ public class CustomizeUIController : MonoBehaviour
 
         public void CanselAction(InputAction.CallbackContext context)
         {
-            uiController.StateTranstion(CustomizeUIState.SelectMenu);
+            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomPartsType);
+            uiControl.StateTranstion(CustomizeUIState.SelectMenu);
+        }
 
-            uiController.bodyMenuParent.gameObject.SetActive(false);
-            uiController.selectMenuParent.gameObject.SetActive(true);
+        private void ChangeArrowPosition()
+        {
+            Vector2 arrowPosi = uiControl.typeSelectArrowRect.localPosition;
+
+            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
+
+            uiControl.typeSelectArrowRect.localPosition = arrowPosi;
         }
 
         private void OpenBodySelectScroll(BodyPartsData.PartsType type)
         {
-            //ボタンを非表示にしスクロールビューを表示　将来的にはDOTweenで動かしたい
-            uiController.ButtonsParent.SetActive(false);
-
             //所持パーツから指定した種類のパーツを抜き出しそれでスクロールビューを構成する
             SaveData saveData = SaveDataManager.instance.saveData;
 
             List<HavingItem> ItemList = saveData.PartsDataList.Where(parts => parts.itemData is BodyPartsData bodyPartData && bodyPartData.Type == type).ToList();
             List<BodyPartsData> TypeDataList = ItemList.Select(parts => (BodyPartsData)parts.itemData).ToList();
 
-            uiController.partsScroll.OpenScrollView();
-            uiController.partsScroll.InitializeUI(TypeDataList, ItemList);
+            uiControl.partsScroll.OpenScrollView();
+            uiControl.partsScroll.InitializeUI(TypeDataList, ItemList);
+
+            uiControl.partsScroll.setPartsType = type;
+
 
             //選択中のメッシュのアウトラインを表示
             //現在装備している選択した種類のデータを取得
-            uiController.robotControl.SetAllOutlines(false);
+            uiControl.robotControl.SetAllOutlines(false);
 
             BodyPartsData partsData = (BodyPartsData)saveData.settingData.PartsNumber[type].itemData;
 
             foreach (KeyValuePair<string, Mesh> keyValue in partsData.ObjnameMeshPairs)
             {
-                uiController.robotControl.SetMeshOutline(keyValue.Key, true);
+                uiControl.robotControl.SetMeshOutline(keyValue.Key, true);
             }
 
+            uiControl.statusUI.ChangeCustomize();
+
             //状態遷移
-            uiController.StateTranstion(CustomizeUIState.OpenedScrollView);
+            uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomSelectParts);
+            uiControl.StateTranstion(CustomizeUIState.OpenedScrollView);
         }
     }
 
@@ -327,7 +361,7 @@ public class CustomizeUIController : MonoBehaviour
         {
             state = CustomizeUIState.SelectWeaponMenu;
 
-            uiController = controller;
+            uiControl = controller;
 
             actionDic = new Dictionary<string, Action>()
             {
@@ -337,57 +371,91 @@ public class CustomizeUIController : MonoBehaviour
             {
             };
 
-            arrowDefaultYPosi = uiController.selectArrowRect.localPosition.y;
+            arrowDefaultYPosi = uiControl.typeSelectArrowRect.localPosition.y;
         }
 
         public override void OnEnter()
         {
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
+            //UIが滑らかにフェードインする
+            Vector2 arrowPosi = uiControl.typeSelectArrowRect.localPosition;
             arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
 
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            uiControl.typeSelectArrowRect.localPosition = arrowPosi;
 
-            uiController.weaponMenuParent.gameObject.SetActive(true);
-            uiController.selectMenuParent.gameObject.SetActive(false);
+            //uiController.typeSelectArrowRect.GetComponent<TextMeshProUGUI>().DOFade(1f, 0.3f);
 
-            uiController.upArrowAct.performed += UpArrowAction;
-            uiController.downArrowAct.performed += DownArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
-            uiController.canselAct.performed += CanselAction;
+            uiControl.bodyMenuParent.gameObject.SetActive(false);
+            uiControl.weaponMenuParent.gameObject.SetActive(true);
+
+            /*
+
+            RectTransform[] menuChildRect = uiControl.weaponMenuParent.GetComponentsInChildren<RectTransform>();
+
+            for (int i = 1; i < menuChildRect.Length; i++)
+            {
+                menuChildRect[i].localPosition = new Vector2(-700f, menuChildRect[i].localPosition.y);
+                menuChildRect[i].DOLocalMoveX(-813f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
+                menuChildRect[i].GetComponent<TextMeshProUGUI>().DOFade(1f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
+            }*/
+
+            uiControl.transitionManager.onTransitionComplete += InputActionRegister;
+
         }
 
         public override void OnExit()
         {
-            uiController.upArrowAct.performed -= UpArrowAction;
-            uiController.downArrowAct.performed -= DownArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
-            uiController.canselAct.performed -= CanselAction;
+            //UIが滑らかにフェードアウトする
+            //uiController.typeSelectArrowRect.GetComponent<TextMeshProUGUI>().DOFade(0f, 0.3f);
+
+            /*
+            RectTransform[] menuChildRect = uiControl.weaponMenuParent.GetComponentsInChildren<RectTransform>();
+
+            for (int i = 1; i < menuChildRect.Length; i++)
+            {
+                menuChildRect[i].localPosition = new Vector2(-813f, menuChildRect[i].localPosition.y);
+                menuChildRect[i].DOLocalMoveX(-900f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
+                menuChildRect[i].GetComponent<TextMeshProUGUI>().DOFade(0f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
+            }*/
+
+            uiControl.transitionManager.onTransitionComplete -= InputActionRegister;
+
+            uiControl.upArrowAct.performed -= UpArrowAction;
+            uiControl.downArrowAct.performed -= DownArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
+            uiControl.cancelAct.performed -= CanselAction;
+        }
+
+        private void InputActionRegister()
+        {
+            uiControl.upArrowAct.performed += UpArrowAction;
+            uiControl.downArrowAct.performed += DownArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
+            uiControl.cancelAct.performed += CanselAction;
         }
 
         public void UpArrowAction(InputAction.CallbackContext context)
         {
             nowSelectNum--;
-
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
-
-            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
-
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            ArrowPositionChange();
         }
 
         public void DownArrowAction(InputAction.CallbackContext context)
         {
             nowSelectNum++;
-
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
+            ArrowPositionChange();
+        }
+
+        private void ArrowPositionChange()
+        {
+            Vector2 arrowPosi = uiControl.typeSelectArrowRect.localPosition;
 
             arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
 
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            uiControl.typeSelectArrowRect.localPosition = arrowPosi;
         }
 
         private void ConfirmAction(InputAction.CallbackContext context) //確定
@@ -403,127 +471,26 @@ public class CustomizeUIController : MonoBehaviour
 
         public void CanselAction(InputAction.CallbackContext context)
         {
-            uiController.StateTranstion(CustomizeUIState.SelectMenu);
-
-            uiController.weaponMenuParent.gameObject.SetActive(false);
-            uiController.selectMenuParent.gameObject.SetActive(true);
+            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomPartsType);
+            uiControl.StateTranstion(CustomizeUIState.SelectMenu);
         }
 
         private void OpenWeaponSelectScroll(WeaponPartsData.SetType type,LegacySettingData.WeaponSetPosi setPosi)
         {
-            //ボタンを非表示にしスクロールビューを表示　将来的にはDOTweenで動かしたい
-            uiController.ButtonsParent.SetActive(false);
-
             //所持パーツから指定した種類のパーツを抜き出しそれでスクロールビューを構成する
             SaveData saveData = SaveDataManager.instance.saveData;
             List<HavingItem> ItemList = saveData.WeaponsDataList.Where(parts => parts.itemData is WeaponPartsData weaponData && weaponData.setType == type).ToList();
             List<WeaponPartsData> TypeDataList = ItemList.Select(parts => (WeaponPartsData)parts.itemData).ToList();
 
-            uiController.partsScroll.InitializeUI(TypeDataList, ItemList);
-            uiController.partsScroll.OpenScrollView();
+            uiControl.partsScroll.InitializeUI(TypeDataList, ItemList);
+            uiControl.partsScroll.OpenScrollView();
 
-            uiController.partsScroll.setPosi = setPosi;
-
-            //状態遷移
-            uiController.StateTranstion(CustomizeUIState.OpenedScrollView);
-        }
-    }
-
-    //待機ステート
-    public class WaitSelectState : CustomizeControlState
-    {
-        //コンストラクタ　初期化
-        public WaitSelectState(CustomizeUIController controller)
-        {
-            state = CustomizeUIState.WaitButtonSelect;
-
-            uiController = controller;
-
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-                {"OpenBodySelectScroll",OpenBodySelectScroll },
-                {"OpenWeaponSelectScroll",OpenWeaponSelectScroll },
-            };
-
-        }
-
-        public void OpenBodySelectScroll(object[] args)
-        {
-            //object型で渡された引数を変換する
-            BodyPartsData.PartsType type = (BodyPartsData.PartsType)args[0];
-
-
-            //ボタンを非表示にしスクロールビューを表示　将来的にはDOTweenで動かしたい
-            uiController.ButtonsParent.SetActive(false);
-
-            //所持パーツから指定した種類のパーツを抜き出しそれでスクロールビューを構成する
-            SaveData saveData = SaveDataManager.instance.saveData;
-
-            List<HavingItem> ItemList = saveData.PartsDataList.Where(parts => parts.itemData is BodyPartsData bodyPartData && bodyPartData.Type == type).ToList();
-            List<BodyPartsData> TypeDataList = ItemList.Select(parts => (BodyPartsData)parts.itemData).ToList();
-
-            uiController.partsScroll.InitializeUI(TypeDataList, ItemList);
-            uiController.partsScroll.gameObject.SetActive(true);
-
-
-            //選択中のメッシュのアウトラインを表示
-            //現在装備している選択した種類のデータを取得
-            uiController.robotControl.SetAllOutlines(false);
-
-            BodyPartsData partsData = (BodyPartsData)saveData.settingData.PartsNumber[type].itemData;
-
-            foreach (KeyValuePair<string, Mesh> keyValue in partsData.ObjnameMeshPairs)
-            {
-                uiController.robotControl.SetMeshOutline(keyValue.Key, true);
-            }
+            uiControl.partsScroll.setPosi = setPosi;
 
             //状態遷移
-            uiController.StateTranstion(CustomizeUIState.OpenedScrollView);
+            uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomSelectParts);
+            uiControl.StateTranstion(CustomizeUIState.OpenedScrollView);
         }
-
-        public void OpenWeaponSelectScroll(object[] args)
-        {
-            //object型で渡された引数を変換する
-            WeaponPartsData.SetType type = (WeaponPartsData.SetType)args[0];
-            LegacySettingData.WeaponSetPosi setPosi = (LegacySettingData.WeaponSetPosi)args[1];
-
-
-            //ボタンを非表示にしスクロールビューを表示　将来的にはDOTweenで動かしたい
-            uiController.ButtonsParent.SetActive(false);
-
-            //所持パーツから指定した種類のパーツを抜き出しそれでスクロールビューを構成する
-            SaveData saveData = SaveDataManager.instance.saveData;
-            List<HavingItem> ItemList = saveData.WeaponsDataList.Where(parts => parts.itemData is WeaponPartsData weaponData && weaponData.setType == type).ToList();
-            List<WeaponPartsData> TypeDataList = ItemList.Select(parts => (WeaponPartsData)parts.itemData).ToList();
-
-            uiController.partsScroll.InitializeUI(TypeDataList, ItemList);
-            uiController.partsScroll.gameObject.SetActive(true);
-
-            uiController.partsScroll.setPosi = setPosi;
-
-
-            //選択中のメッシュのアウトラインを表示
-            //現在装備している選択した種類のデータを取得
-            /*
-            uiController.robotControl.SetAllOutlines(false);
-
-            BodyPartsData partsData = (BodyPartsData)ItemDataBaseController.instance.itemDataBase.GetItem(saveData.settingData.PartsNumber[type]);
-
-            foreach (KeyValuePair<string, Mesh> keyValue in partsData.ObjnameMeshPairs)
-            {
-                uiController.robotControl.SetMeshOutline(keyValue.Key, true);
-            }
-
-            */
-
-            //状態遷移
-            uiController.StateTranstion(CustomizeUIState.OpenedScrollView);
-        }
-
     }
 
     //スクロールビューでの選択待ちステート
@@ -534,69 +501,63 @@ public class CustomizeUIController : MonoBehaviour
         {
             state = CustomizeUIState.OpenedScrollView;
 
-            uiController = controller;
-
-            actionDic = new Dictionary<string, Action>()
-            {{"CloseScrollView",CloseScrollView }, };
+            uiControl = controller;
         }
 
         public override void OnEnter()
         {
-            uiController.upArrowAct.performed += UpArrowAction;
-            uiController.downArrowAct.performed += DownArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
-            uiController.canselAct.performed += CanselAction;
+            uiControl.transitionManager.onTransitionComplete += InputActionRegister;
         }
 
         public override void OnExit()
         {
-            uiController.upArrowAct.performed -= UpArrowAction;
-            uiController.downArrowAct.performed -= DownArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
-            uiController.canselAct.performed -= CanselAction;
+            uiControl.transitionManager.onTransitionComplete -= InputActionRegister;
+
+            uiControl.upArrowAct.performed -= UpArrowAction;
+            uiControl.downArrowAct.performed -= DownArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
+            uiControl.cancelAct.performed -= CanselAction;
+        }
+
+        private void InputActionRegister()
+        {
+            uiControl.upArrowAct.performed += UpArrowAction;
+            uiControl.downArrowAct.performed += DownArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
+            uiControl.cancelAct.performed += CanselAction;
         }
 
         public void UpArrowAction(InputAction.CallbackContext context)
         {
-            uiController.partsScroll.ChangeForcus(-1);
+            uiControl.partsScroll.ChangeForcus(-1);
         }
 
         public void DownArrowAction(InputAction.CallbackContext context)
         {
-            uiController.partsScroll.ChangeForcus(1);
+            uiControl.partsScroll.ChangeForcus(1);
         }
 
         private void ConfirmAction(InputAction.CallbackContext context) //確定
         {
-            
+            uiControl.partsScroll.SelectConfirm();
         }
 
         public void CanselAction(InputAction.CallbackContext context)
         {
-            uiController.StateTranstion(uiController.beforeState.state);
-
-            uiController.partsScroll.CloseScrollView();
-
-            //アウトラインを非表示に
-            uiController.robotControl.SetAllOutlines(false);
-        }
-
-
-        public void CloseScrollView()
-        {
-            //ボタンを表示しスクロールビューを非表示
-            uiController.partsScroll.gameObject.SetActive(false);
-
-            uiController.ButtonsParent.SetActive(true);
-
-            //アウトラインを非表示に
-            uiController.robotControl.SetAllOutlines(false);
-
             //オートセーブする
             SaveDataManager.instance.SaveFileWriteAsync();
 
-            //状態遷移
-            uiController.StateTranstion(CustomizeUIState.WaitButtonSelect);
+            //アウトラインを非表示に
+            uiControl.robotControl.SetAllOutlines(false);
+
+            if (uiControl.beforeState.state == CustomizeUIState.SelectBodyMenu)
+            {
+                uiControl.statusUI.ChangeCustomize();
+                uiControl.StatusUIDataReflesh();
+            }
+
+            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.CustomPartsType, DockImageTransition.MenuType.CustomSelectParts);
+            uiControl.StateTranstion(uiControl.beforeState.state);
         }
     }
 
@@ -608,7 +569,7 @@ public class CustomizeUIController : MonoBehaviour
 
     private CustomizeControlState nowState,beforeState;
 
-    public RectTransform selectArrowRect;
+    public RectTransform genreSelectArrowRect,typeSelectArrowRect;
     public RectTransform selectMenuParent, bodyMenuParent,weaponMenuParent;
 
     public GameObject legacyCustomPrefab;
@@ -620,8 +581,12 @@ public class CustomizeUIController : MonoBehaviour
 
     public MainMenuUIController mainMenuControl;
 
+    public DockImageTransition transitionManager;
+
     [NonSerialized]
-    public InputAction upArrowAct, downArrowAct, leftArrowAct, rightArrowAct, confirmAct, canselAct;
+    public InputAction upArrowAct, downArrowAct, leftArrowAct, rightArrowAct, confirmAct, cancelAct;
+
+    private InputAction openStatusAct;
 
     // Start is called before the first frame update
     void Start()
@@ -634,21 +599,22 @@ public class CustomizeUIController : MonoBehaviour
         leftArrowAct = testControl.UI.LeftArrow;
         rightArrowAct = testControl.UI.RightArrow;
         confirmAct = testControl.UI.Confirm;
-        canselAct = testControl.UI.Cansel;
+        cancelAct = testControl.UI.Cancel;
+        openStatusAct = testControl.UI.OpenStatus;
+
+        openStatusAct.performed += StatusOpenClose;
 
         upArrowAct.Enable();
         downArrowAct.Enable();
         leftArrowAct.Enable();
         rightArrowAct.Enable();
         confirmAct.Enable();
-        canselAct.Enable();
+        cancelAct.Enable();
+        openStatusAct.Enable();
 
         States.Add(new SetUpState(this));
-        States.Add(new SelectMenuState(this));
-
-        
         States.Add(new WaitState(this));
-        States.Add(new WaitSelectState(this));
+        States.Add(new SelectMenuState(this));
         States.Add(new SelectBodyMenuState(this));
         States.Add(new SelectWeaponMenuState(this));
         States.Add(new OpenedScrollViewState(this));
@@ -719,46 +685,17 @@ public class CustomizeUIController : MonoBehaviour
         nowState.OnEnter();
     }
 
-    //保存
-    public void SaveButtonOnClick()
-    {
-        SaveDataManager.instance.SaveFileWrite();
-    }
-
     //ステータス表示
-    public void StatusButtonOnClick()
+    public void StatusOpenClose(InputAction.CallbackContext context)
     {
-        if (statusUI.gameObject.activeSelf)
-        {
-            statusUI.gameObject.SetActive(false);
-            
-        }
-        else
-        {
-            StatusUIDataReflesh();
-
-            statusUI.gameObject.SetActive(true);
-        }
+        statusUI.ChangeNextState();
+        StatusUIDataReflesh();
     }
 
     //ステータスUIデータ更新
     public void StatusUIDataReflesh()
     {
-        //データ取得
-        LegacySettingData settingData = SaveDataManager.instance.saveData.settingData;
-
-        //ボディパーツ反映
-        List<BodyPartsData> bodyParts = new List<BodyPartsData>();
-        Dictionary<LegacySettingData.WeaponSetPosi, WeaponPartsData> weaponParts = new Dictionary<LegacySettingData.WeaponSetPosi, WeaponPartsData>();
-
-        //全パーツのデータ取得
-        foreach (KeyValuePair<BodyPartsData.PartsType, HavingItem> keyValue in settingData.PartsNumber)
-        {
-            BodyPartsData Data = (BodyPartsData)keyValue.Value.itemData;
-            bodyParts.Add(Data);
-        }
-
-        statusUI.StatusInitialize(bodyParts);
+        statusUI.NowStatusInitialize();
         statusUI.UIInitialize();
     }
 }
@@ -773,13 +710,12 @@ public abstract class CustomizeControlState : IState
         SelectMenu,     //ボディパーツか武器パーツか選択するメニュー
         SelectBodyMenu, //頭や体、どのパーツを変更するか選択するメニュー
         SelectWeaponMenu, //左腕や右腕、どのパーツを変更するか選択するメニュー
-        WaitButtonSelect,
         OpenedScrollView,
     }
 
     public CustomizeUIState state;
 
-    protected CustomizeUIController uiController;
+    protected CustomizeUIController uiControl;
 
     //呼べる関数をまとめるDictionary
     protected Dictionary<string, Action> actionDic;

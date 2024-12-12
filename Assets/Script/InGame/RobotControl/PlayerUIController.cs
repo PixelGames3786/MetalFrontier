@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
+using UnityEngine.UI;
 
 public class PlayerUIController : MonoBehaviour
 {
@@ -11,6 +13,9 @@ public class PlayerUIController : MonoBehaviour
     public OutOfAreaUI outOfAreaUI;
     public BackToBaseUI backToBaseUI;
     public HackSlashUI hackSlashUI;
+    public OverHeatUI overHeatUI, hpCautionUI;
+
+    public Image awakeImage;
 
     // Start is called before the first frame update
     void Start()
@@ -59,11 +64,54 @@ public class PlayerUIController : MonoBehaviour
         boostBar.ValueChange(nowBoost);
     }
 
+    public void InLowFuel() //オーバーヒート状態に近づいたとき（全体量の2割を下回ったら）
+    {
+        Debug.Log("いつ呼ばれてる？");
+
+        overHeatUI.ChangeText("Low Fuel");
+        overHeatUI.OpenWindow();
+    }
+
+    public void CloseOverHeatUI() //残燃料が少ない状態から出たとき またはオーバーヒート状態から回復したとき
+    {
+        overHeatUI.CloseWindow();
+    }
+
+    public void StartOverHeat() //オーバーヒート状態に入ると
+    {
+        overHeatUI.ChangeText("OverHeat");
+        overHeatUI.OpenWindow();
+    }
+
+
+    public void InLowHP()
+    {
+        hpCautionUI.OpenWindow();
+    }
+
+    public void OutLowHP()
+    {
+        hpCautionUI.CloseWindow();
+    }
+
+
+    //クォーラ関係
     public void QuorraBarChange(float nowQuorra)
     {
         quorraBar.ValueChange(nowQuorra);
     }
 
+    public void ShowAwakeImage() //覚醒状態に入った際に画面の周りを明るくする
+    {
+        awakeImage.DOFade(1f,0.5f);
+    }
+
+    public void HideAwakeImage()
+    {
+        awakeImage.DOFade(0f, 0.5f);
+    }
+
+    //ハクスラ選択
     public void OpenHackSlashUI(List<ItemData> items,HackSlashSource source)
     {
         hackSlashUI.InitializeUI(items,source);
@@ -86,9 +134,22 @@ public class PlayerUIController : MonoBehaviour
 
 
         //イベントのサブスクライブなどを行う
-        statusControl.OnHPChanged += HPBarChange;
-        statusControl.OnBoostChanged += BoostBarChange;
-        statusControl.OnQuorraChanged += QuorraBarChange;
+        statusControl.onHPChanged += HPBarChange;
+        statusControl.onBoostChanged += BoostBarChange;
+        statusControl.onQuorraChanged += QuorraBarChange;
+
+        statusControl.robotControl.onAwakeStart += ShowAwakeImage;
+        statusControl.robotControl.onAwakeEnd += HideAwakeImage;
+
+        statusControl.onInLowFuel += InLowFuel;
+        statusControl.onOutLowFuel += CloseOverHeatUI;
+        statusControl.onInOverHeat += StartOverHeat;
+        statusControl.onOutOverHeat += CloseOverHeatUI;
+
+        statusControl.onInLowHP += InLowHP;
+        statusControl.onOutLowHP += OutLowHP;
+
+        statusControl.robotControl.onDied += OutLowHP;
 
         statusControl.GetComponent<RobotPlayerInput>().OutOfAreaCountDown += CountDownChange;
     }

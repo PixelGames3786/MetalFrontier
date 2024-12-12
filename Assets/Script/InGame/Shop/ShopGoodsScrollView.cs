@@ -35,12 +35,12 @@ public class ShopGoodsScrollView : MonoBehaviour
 
     public void OpenScrollView()
     {
-        GetComponent<RectTransform>().DOScaleX(1f, 1f);
+        GetComponent<RectTransform>().DOScaleX(1f, 0.5f);
     }
 
     public void CloseScrollView()
     {
-        GetComponent<RectTransform>().DOScaleX(0f, 1f);
+        GetComponent<RectTransform>().DOScaleX(0f, 0.5f);
     }
 
     public void InitializeScrollView(List<ItemData> displayGoods)

@@ -1,5 +1,5 @@
 {
-    "name": "TestControls",
+    "name": "InputControls",
     "maps": [
         {
             "name": "Player",
@@ -451,9 +451,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Cansel",
+                    "name": "Cancel",
                     "type": "Button",
                     "id": "619e9531-49ff-4e4f-802c-5348a22a3ed4",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "OpenStatus",
+                    "type": "Button",
+                    "id": "d0ee4a16-03e9-4062-8027-000e4b2f7a8d",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -501,7 +510,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Cansel",
+                    "action": "Cancel",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -524,6 +533,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "RightArrow",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6e55f8d1-1c12-47a7-ad8f-a40cf7e55beb",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "OpenStatus",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

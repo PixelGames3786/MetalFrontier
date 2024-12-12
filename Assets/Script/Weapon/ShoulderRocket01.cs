@@ -24,8 +24,6 @@ public class ShoulderRocket01 : WeaponBase
 
     public Transform pivotObj;
 
-    public float bulletSpeed,shotInterval;
-
     //射撃可能か
     private bool canShot=true;
 
@@ -40,14 +38,14 @@ public class ShoulderRocket01 : WeaponBase
     {
         if (isIntervalWait)
         {
-            intervalWaitTime += Time.deltaTime;
+            intervalElapseTime += Time.deltaTime;
 
-            if (intervalWaitTime >= useInterval)
+            if (intervalElapseTime >= weaponData.useInterval)
             {
                 canShot = true;
                 isIntervalWait = false;
 
-                intervalWaitTime = 0;
+                intervalElapseTime = 0;
                 OnEndInterval?.Invoke(weaponPosition);
             }
         }
@@ -55,16 +53,23 @@ public class ShoulderRocket01 : WeaponBase
 
     public override async void Use(Transform target = null)
     {
-        if (!canShot || bulletLeft==0) return;
+        if (!canShot || bulletLeft==0 || leftBulletNum==0) return;
 
         canShot = false;
 
         Transform bulletObj = bullets[bulletLeft-1];
 
         //自身のコライダーとぶつからないようにする
-        Physics.IgnoreCollision(bulletObj.gameObject.GetComponent<Collider>(), FindObjectOfType<RobotPlayerInput>().GetComponent<Collider>(), true);
+        //自身に当たらないように
+        Physics.IgnoreCollision(bulletObj.GetComponent<Collider>(), controller.GetComponent<Collider>(), true);
 
-        Vector3 shotPower=pivotObj.forward * bulletSpeed;
+        //ダメージ登録
+        ShoulderRocket01Bullet bullet = bulletObj.GetComponentInChildren<ShoulderRocket01Bullet>();
+
+        bullet.attackData.type = weaponData.attackType;
+        bullet.attackData.damage = weaponData.damage;
+
+        Vector3 shotPower=pivotObj.forward * weaponData.bulletSpeed;
 
         bulletObj.GetComponent<ShoulderRocket01Bullet>().Shot(target,shotPower);
 
@@ -74,6 +79,11 @@ public class ShoulderRocket01 : WeaponBase
 
         //射撃可能間隔を待つ
         isIntervalWait = true;
+
+        leftBulletNum--;
+        leftBulletNum = Mathf.Clamp(leftBulletNum, 0, maxBulletNum);
+
+        onLeftBulletChange?.Invoke(weaponPosition);
         OnStartInterval?.Invoke(weaponPosition);
     }
 

@@ -13,12 +13,20 @@ MonoBehaviour:
   m_Name: Pistol01
   m_EditorClassIdentifier: 
   ItemNumber: 501
+  itemType: 1
   price: 0
   itemName: "\u30D4\u30B9\u30C8\u30EB01"
   Description: "\u306A\u3057"
   setType: 1
   weaponType: 0
   attackType: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
+  bulletSpeed: 150
+  damage: 10
+  shotBlur: 0.05
+  useInterval: 0.2
+  defaultBullet: 100
   setPosiWithPrefab:
     _list:
     - key: 0

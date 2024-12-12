@@ -3,21 +3,31 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using UnityEngine.InputSystem;
 
 public class TitleController : MonoBehaviour
 {
     [SerializeField]
-    private Canvas titleCanvas, missionCanvas,curtainCanvas;
+    private Canvas titleCanvas;
 
     [SerializeField]
-    private MissionScrollView missionScroll;
+    private CanvasGroup curtainCanvas;
 
     private bool sceneLoading;
+
+    private InputAction confirmAct;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        curtainCanvas.DOFade(0f, 0.5f).OnComplete(() => 
+        {
+            confirmAct = new InputControls().UI.Confirm;
+
+            confirmAct.performed += ConfirmButton;
+
+            confirmAct.Enable();
+        });
     }
 
     // Update is called once per frame
@@ -26,40 +36,22 @@ public class TitleController : MonoBehaviour
         
     }
 
-    public void StartButtonClick()
+    public void ConfirmButton(InputAction.CallbackContext context)
     {
         if (!SaveDataManager.instance.isLoadComplete) return;
 
         curtainCanvas.gameObject.SetActive(true);
 
-        curtainCanvas.GetComponent<CanvasGroup>().DOFade(1f, 0.5f).OnComplete(() => 
+        curtainCanvas.DOFade(1f, 0.5f).OnComplete(() => 
         {
             SceneChangeManager.instance.StartCoroutine("SceneTransition", "DockScene");
         });
-
-        /*
-
-        missionScroll.InitializeUI(SaveDataManager.instance.saveData.missionDataList);
-        missionCanvas.gameObject.SetActive(true);
-
-        titleCanvas.GetComponent<CanvasGroup>().DOFade(0f,0.5f);
-        missionCanvas.GetComponent<CanvasGroup>().DOFade(1f, 0.5f).OnComplete(() => 
-        { 
-            titleCanvas.gameObject.SetActive(false); 
-        });
-
-        */
     }
 
-    public void StartSceneLoad(string sceneName)
+    public void OnDisable()
     {
-        sceneLoading = true;
+        confirmAct.performed -= ConfirmButton;
 
-        SceneChangeManager.instance.StartCoroutine("SceneTransition",sceneName);
-
-        missionCanvas.GetComponent<CanvasGroup>().DOFade(0f, 0.5f).OnComplete(() => 
-        {
-            missionCanvas.gameObject.SetActive(false);
-        });
+        confirmAct.Disable();
     }
 }

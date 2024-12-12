@@ -132,9 +132,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8818366ef90aa7f4f942fafb2e346734, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  itemNum: 502
   weaponData: {fileID: 11400000, guid: f69860d791065c447afae67c1aabde51, type: 2}
   useInterval: 2
   intervalWaitTime: 0
+  legacyStatus:
+    maxHP: 0
+    moveSpeed: 0
+    boostSpeed: 0
+    jumpForce: 0
+    riseForce: 0
+    shotAccuracy: 0
+    boostAmount: 0
+    boostUseRate: 0
+    boostRecoverRate: 0
+    physicalRes: 0
+    beamRes: 0
+    maxVel: {x: 0, y: 0, z: 0}
+    boostMaxVel: {x: 0, y: 0, z: 0}
+    quorraAmount: 400
+    quorraUseRate: 4
+    quorraRecoverRate: 2
+  weaponPosition: 0
+  controller: {fileID: 0}
   bulletParent:
   - {fileID: 8391773144819608464}
   - {fileID: 1484611183232329383}

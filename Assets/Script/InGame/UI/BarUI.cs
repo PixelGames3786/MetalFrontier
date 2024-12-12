@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using System;
 
 public class BarUI : MonoBehaviour
 {
@@ -9,17 +11,15 @@ public class BarUI : MonoBehaviour
 
     public float maxValue,nowValue;
 
+    [SerializeField]
+    private TextMeshProUGUI valueText;
+
     // Start is called before the first frame update
     void Start()
     {
         
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
     public void ValueSetUp(float maxVal,float nowVal)
     {
@@ -30,6 +30,9 @@ public class BarUI : MonoBehaviour
         float ratio = nowValue / maxValue;
 
         barRect.localScale=new Vector3(ratio, barRect.localScale.y, barRect.localScale.z);
+
+        //テキスト反映
+        if(valueText) valueText.text = $"{(int)nowValue} / {(int)maxValue}";
     }
 
     public void ValueChange(float val)
@@ -40,5 +43,9 @@ public class BarUI : MonoBehaviour
         float ratio = nowValue / maxValue;
 
         barRect.localScale= new Vector3(ratio,barRect.localScale.y,barRect.localScale.z);
+
+        //テキスト反映
+        if (valueText) valueText.text = $"{(int)nowValue} / {(int)maxValue}";
+
     }
 }

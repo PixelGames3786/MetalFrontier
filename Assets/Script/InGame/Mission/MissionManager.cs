@@ -4,10 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
-using static CustomizeUIController;
-using static UnityEditor.VersionControl.Asset;
-using Unity.VisualScripting;
-using UnityEngine.InputSystem.XR;
 using System.Linq;
 using static MissionState;
 using Cysharp.Threading.Tasks;
@@ -135,7 +131,7 @@ public class MissionManager : MonoBehaviour
             }
 
             missionManager.menuGroup.gameObject.SetActive(true);
-            missionManager.menuGroup.DOFade(1f, 0.5f).SetUpdate(true).OnComplete(() => 
+            missionManager.menuGroup.DOFade(1f, 0.5f).SetUpdate(true).OnComplete(() =>
             {
                 missionManager.StateTranstion(MissionStateEnum.Menu);
             });
@@ -291,7 +287,7 @@ public class MissionManager : MonoBehaviour
     {
         public Action<int> waitCountDown;
 
-        private int waitReturnCount=60;
+        private int waitReturnCount = 60;
 
         private Coroutine waitReturnCoroutine;
 
@@ -305,14 +301,6 @@ public class MissionManager : MonoBehaviour
             State = MissionStateEnum.WaitForReturn;
 
             missionManager = manager;
-
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
         }
 
         //ステートに入った際に、画面上にカウントダウンを出す
@@ -325,7 +313,7 @@ public class MissionManager : MonoBehaviour
             BackAction.Enable();
 
             //BackToBaseUIをセットアップ
-            PlayerUIController uiController =FindObjectOfType<PlayerUIController>();
+            PlayerUIController uiController = FindObjectOfType<PlayerUIController>();
             uiController.StartReturnCountDown();
             waitCountDown += uiController.ReturnCountDownChange;
 
@@ -373,15 +361,17 @@ public class MissionManager : MonoBehaviour
             _cts.Dispose();
             _cts = null;
 
+            missionManager.GetReward();
             missionManager.MissionStop();
             missionManager.resultManager.ResultSetUp();
         }
-
-
     }
 
 
     private List<MissionState> states = new List<MissionState>();
+
+    //ミッション中に入手したアイテム　クリアした際に入手する
+    public List<HavingItem> getItems { get; private set; } = new List<HavingItem>();
 
     private MissionState nowState;
 
@@ -444,8 +434,6 @@ public class MissionManager : MonoBehaviour
         {
             condition.MissionClear();
 
-            OnClear();
-
             StateTranstion(MissionStateEnum.WaitForReturn);
         }
 
@@ -478,12 +466,25 @@ public class MissionManager : MonoBehaviour
     }
 
     //クリア時に、アイテムを手に入れたりする処理
-    public void OnClear()
+    public void GetReward()
     {
         SaveData saveData = SaveDataManager.instance.saveData;
 
+        foreach (ItemData data in condition.missionData.clearGetItems)
+        {
+            getItems.Add(new HavingItem(data.ItemNumber));
+        }
+
+        foreach (var data in getItems) Debug.Log(data.itemData.itemName);
+
         saveData.ColChange(condition.missionData.clearGetCol);
-        saveData.AddItemRange(condition.missionData.clearGetItems.Select(item=>item.ItemNumber).ToArray());
+        saveData.AddItemRange(getItems.ToArray());
+    }
+
+    //ミッション中にアイテムを入手する　入手したアイテムはクリア時に実際にプレイヤーに渡される
+    public void GetItem(int itemNum)
+    {
+        getItems.Add(new HavingItem(itemNum));
     }
 
 

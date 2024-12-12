@@ -13,12 +13,20 @@ MonoBehaviour:
   m_Name: ShoulderCanon
   m_EditorClassIdentifier: 
   ItemNumber: 506
+  itemType: 1
   price: 0
   itemName: "\u80A9\u30AD\u30E3\u30CE\u30F301"
   Description: "\u306A\u3057"
   setType: 0
   weaponType: 0
   attackType: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
+  bulletSpeed: 200
+  damage: 40
+  shotBlur: 0.05
+  useInterval: 1
+  defaultBullet: 100
   setPosiWithPrefab:
     _list:
     - key: 2

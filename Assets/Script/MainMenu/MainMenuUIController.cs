@@ -9,6 +9,7 @@ using TMPro;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
 using static MissionManager;
+using MenuType = DockImageTransition.MenuType;
 
 public class MainMenuUIController : MonoBehaviour
 {
@@ -100,14 +101,6 @@ public class MainMenuUIController : MonoBehaviour
 
             uiController = controller;
 
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
-
             arrowDefaultYPosi = uiController.selectArrowRect.localPosition.y;
         }
 
@@ -124,29 +117,37 @@ public class MainMenuUIController : MonoBehaviour
             uiController.downArrowAct.performed -= DownArrowAction;
             uiController.confirmAct.performed -= ConfirmAction;
 
+            switch (transitState)
+            {
+                case MenuState.Mission:
+
+                    uiController.transitionManager.TransitionToRight(MenuType.Terminal, MenuType.Mission);
+                    uiController.missionUIControl.StateTranstion(MissionSelectState.MissionSelectStateEnum.SelectMission);
+
+                    break;
+
+                case MenuState.Customize:
+
+                    uiController.transitionManager.TransitionToRight(MenuType.Terminal, MenuType.CustomGenre);
+                    uiController.customizeUIControl.StateTranstion(CustomizeControlState.CustomizeUIState.SelectMenu);
+
+                    break;
+
+                case MenuState.Shop:
+
+                    uiController.transitionManager.TransitionToRight(MenuType.Terminal, MenuType.Shop);
+                    uiController.shopUIControl.StateTranstion(ShopControllerState.ShopState.SelectGenre);
+
+                    break;
+            }
+
+            /*
             uiController.thisCanvas.DOFade(0f, 0.3f).OnComplete(() => 
             {
-                switch (transitState)
-                {
-                    case MenuState.Mission:
-
-                        uiController.missionUIControl.StateTranstion(MissionSelectState.MissionSelectStateEnum.SelectMission);
-
-                        break;
-
-                    case MenuState.Customize:
-
-                        uiController.customizeUIControl.StateTranstion(CustomizeControlState.CustomizeUIState.SelectMenu);
-
-                        break;
-
-                    case MenuState.Shop:
-
-                        uiController.shopUIControl.StateTranstion(ShopControllerState.ShopState.SelectGenre);
-
-                        break;
-                }
+                
             });
+
+            /*
 
             for (int i = 0; i < uiController.selectTextRects.Count; i++)
             {
@@ -154,6 +155,7 @@ public class MainMenuUIController : MonoBehaviour
                 uiController.selectTextRects[i].DOLocalMoveX(-900f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
                 uiController.selectTextRects[i].GetComponent<TextMeshProUGUI>().DOFade(0f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
             }
+            */
         }
 
         public void UpArrowAction(InputAction.CallbackContext context)
@@ -184,7 +186,6 @@ public class MainMenuUIController : MonoBehaviour
 
         private void ConfirmAction(InputAction.CallbackContext context) //確定
         {
-            //現在選択している種類の商品のスクロールビューを表示する
             transitState = (MenuState)nowSelectNum;
 
             uiController.StateTranstion(MainMenuStateEnum.Wait);
@@ -204,8 +205,10 @@ public class MainMenuUIController : MonoBehaviour
     public ShopUIController shopUIControl;
     public MissionSelectUIController missionUIControl;
 
+    public DockImageTransition transitionManager;
+
     [NonSerialized]
-    public InputAction upArrowAct, downArrowAct,leftArrowAct,rightArrowAct, confirmAct,canselAct;
+    public InputAction upArrowAct, downArrowAct,leftArrowAct,rightArrowAct, confirmAct,cancelAct;
 
     // Start is called before the first frame update
     void Start()
@@ -218,14 +221,14 @@ public class MainMenuUIController : MonoBehaviour
         leftArrowAct = testControl.UI.LeftArrow;
         rightArrowAct = testControl.UI.RightArrow;
         confirmAct = testControl.UI.Confirm;
-        canselAct = testControl.UI.Cansel;
+        cancelAct = testControl.UI.Cancel;
 
         upArrowAct.Enable();
         downArrowAct.Enable();
         leftArrowAct.Enable();
         rightArrowAct.Enable(); 
         confirmAct.Enable();
-        canselAct.Enable();
+        cancelAct.Enable();
 
         States.Add(new WaitLoadState(this));
         States.Add(new SelectMenuState(this));

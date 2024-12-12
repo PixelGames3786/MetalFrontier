@@ -17,6 +17,9 @@ public class BodyPartsData : ItemData
 
     public PartsType Type;
 
+    public int maxModuleSlot;
+    public int minModuleSlot;
+
 
     //1つのパーツに複数のメッシュが含まれる場合があるため
     public SerializableDictionary<string,Mesh> ObjnameMeshPairs=new SerializableDictionary<string, Mesh>();

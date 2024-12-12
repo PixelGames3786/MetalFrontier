@@ -30,11 +30,20 @@ public class WeaponPartsData : ItemData
     public WeaponType weaponType;
     public AttackType attackType;
 
+    public int maxModuleSlot;
+    public int minModuleSlot;
+
+    //パラメータ
+    public float bulletSpeed;
+    public float damage;
+    public float shotBlur; //射撃ブレ
+    public float useInterval; //使用間隔
+    public int defaultBullet; //デフォルトの装弾数
+
     public SerializableDictionary<LegacySettingData.WeaponSetPosi, GameObject> setPosiWithPrefab;
 
     //1つのパーツに複数のメッシュが含まれる場合があるため
     //public SerializableDictionary<string, Mesh> ObjnameMeshPairs = new SerializableDictionary<string, Mesh>();
 
-    //パラメータ
 
 }

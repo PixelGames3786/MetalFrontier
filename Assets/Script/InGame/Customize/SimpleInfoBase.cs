@@ -18,4 +18,9 @@ public class SimpleInfoBase : MonoBehaviour
     {
         forcusImage.DOFade(0f, 0.3f);
     }
+
+    public virtual void OnSelect()
+    {
+
+    }
 }

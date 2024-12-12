@@ -162,6 +162,7 @@ public class ItemDataImporter : EditorWindow
         item.Type = type;
         item.price = itemPrice;
         item.ObjnameMeshPairs = new SerializableDictionary<string, Mesh>();
+        item.itemType = ItemData.ItemType.BodyParts;
 
         Mesh targetMesh = null;
         string findMeshName = "";
@@ -287,6 +288,7 @@ public class ItemDataImporter : EditorWindow
         item.beamRes = beamRes;
         item.maxVel = new Vector3(normalMaxVel,normalMaxVel,normalMaxVel);
         item.boostMaxVel = new Vector3(boostMaxVel,boostMaxVel,boostMaxVel);
+        item.itemType = ItemData.ItemType.WeaponParts;
 
         // アセットを変更としてマークして保存
         EditorUtility.SetDirty(item);
@@ -304,7 +306,12 @@ public class ItemDataImporter : EditorWindow
         WeaponPartsData.SetType setType = (WeaponPartsData.SetType)Enum.Parse(typeof(WeaponPartsData.SetType), values[5]);
         WeaponPartsData.AttackType attackType = (WeaponPartsData.AttackType)Enum.Parse(typeof(WeaponPartsData.AttackType), values[6]);
         int itemPrice = int.Parse(values[7]);
-        
+        float bulletSpeed = float.Parse(values[8]);
+        float damage = float.Parse(values[9]);
+        float shotBlur= float.Parse(values[10]);
+        float useInterval = float.Parse(values[11]);
+        int defaultBullet = int.Parse(values[12]);
+
 
         WeaponPartsData item = ScriptableObject.CreateInstance<WeaponPartsData>();
 
@@ -315,11 +322,17 @@ public class ItemDataImporter : EditorWindow
         item.weaponType = weaponType;
         item.setType = setType;
         item.attackType= attackType;
+        item.bulletSpeed = bulletSpeed;
+        item.damage= damage;
+        item.shotBlur = shotBlur;
+        item.useInterval = useInterval;
+        item.defaultBullet = defaultBullet;
+        item.itemType = ItemData.ItemType.WeaponParts;
 
         item.setPosiWithPrefab =new SerializableDictionary<LegacySettingData.WeaponSetPosi, GameObject>();
 
         //セット箇所とプレハブを取得しセット　1箇所目
-        string[] setPosiPrefab = values[8].Split('/');
+        string[] setPosiPrefab = values[13].Split('/');
 
         GameObject targetObj = null;
         LegacySettingData.WeaponSetPosi weaponSetPosi= (LegacySettingData.WeaponSetPosi)Enum.Parse(typeof(LegacySettingData.WeaponSetPosi), setPosiPrefab[0]);
@@ -328,7 +341,7 @@ public class ItemDataImporter : EditorWindow
         item.setPosiWithPrefab.Add(weaponSetPosi,targetObj);
 
         //セット箇所とプレハブを取得しセット　2箇所目
-        setPosiPrefab = values[9].Split('/');
+        setPosiPrefab = values[14].Split('/');
 
         weaponSetPosi = (LegacySettingData.WeaponSetPosi)Enum.Parse(typeof(LegacySettingData.WeaponSetPosi), setPosiPrefab[0]);
 

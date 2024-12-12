@@ -7,7 +7,7 @@ using DG.Tweening;
 
 public class BodyPartsSimpleInfo : SimpleInfoBase
 {
-    private HavingItem haveItemData;
+    public HavingItem haveItemData {  get; private set; }
     private BodyPartsData PartsData;
 
     public TextMeshProUGUI PartsNameText;
@@ -34,8 +34,8 @@ public class BodyPartsSimpleInfo : SimpleInfoBase
         PartsNameText.text = PartsData.itemName;
     }
 
-    public void OnClick()
+    public override void OnSelect()
     {
-        if(!haveItemData.equiped) scrollView.BodyPartsSelect(PartsData.Type,PartsData.ItemNumber,haveItemData);
+        if (!haveItemData.equiped) scrollView.BodyPartsSelect(PartsData.Type, PartsData.ItemNumber, haveItemData);
     }
 }

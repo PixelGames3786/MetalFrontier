@@ -13,12 +13,20 @@ MonoBehaviour:
   m_Name: SniperRifle01
   m_EditorClassIdentifier: 
   ItemNumber: 504
+  itemType: 1
   price: 0
   itemName: "\u30B9\u30CA\u30A4\u30D1\u30FC\u30E9\u30A4\u30D5\u30EB01"
   Description: "\u306A\u3057"
   setType: 1
   weaponType: 0
   attackType: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
+  bulletSpeed: 250
+  damage: 35
+  shotBlur: 0.02
+  useInterval: 1
+  defaultBullet: 100
   setPosiWithPrefab:
     _list:
     - key: 0

@@ -8,6 +8,7 @@ using DG.Tweening;
 using TMPro;
 using Cysharp.Threading.Tasks;
 using static CustomizeControlState;
+using UnityEditor.ShaderGraph;
 
 public class ShopUIController : MonoBehaviour
 {
@@ -16,18 +17,9 @@ public class ShopUIController : MonoBehaviour
         //コンストラクタ　初期化
         public WaitState(ShopUIController controller)
         {
-            State = ShopState.Wait;
+            state = ShopState.Wait;
 
-            uiController = controller;
-
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
-
+            uiControl = controller;
         }
     }
 
@@ -47,39 +39,45 @@ public class ShopUIController : MonoBehaviour
         //コンストラクタ　初期化
         public SelectGenreState(ShopUIController controller)
         {
-            State = ShopState.SelectGenre;
+            state = ShopState.SelectGenre;
 
-            uiController = controller;
+            uiControl = controller;
 
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
-
-            arrowDefaultYPosi = uiController.selectArrowRect.localPosition.y;
+            arrowDefaultYPosi = uiControl.selectArrowRect.localPosition.y;
         }
 
         public override void OnEnter()
         {
-            uiController.upArrowAct.performed += UpArrowAction;
-            uiController.downArrowAct.performed += DownArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
-            uiController.canselAct.performed += CanselAction;
+            uiControl.colText.text = SaveDataManager.instance.saveData.haveCol+" Col";
 
-            uiController.colText.text = SaveDataManager.instance.saveData.haveCol+" Col";
+            //uiController.GetComponent<CanvasGroup>().DOFade(1f,0.4f);
 
-            uiController.GetComponent<CanvasGroup>().DOFade(1f,0.4f);
+            if (uiControl.beforeState.state == ShopState.Wait)
+            {
+                uiControl.transitionManager.onTransitionComplete += InputActionRegister;
+            }
+            else
+            {
+                InputActionRegister();
+            }
         }
 
         public override void OnExit()
         {
-            uiController.upArrowAct.performed -= UpArrowAction;
-            uiController.downArrowAct.performed -= DownArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
-            uiController.canselAct.performed-= CanselAction;
+            uiControl.transitionManager.onTransitionComplete -= InputActionRegister;
+
+            uiControl.upArrowAct.performed -= UpArrowAction;
+            uiControl.downArrowAct.performed -= DownArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
+            uiControl.cancelAct.performed-= CanselAction;
+        }
+
+        private void InputActionRegister()
+        {
+            uiControl.upArrowAct.performed += UpArrowAction;
+            uiControl.downArrowAct.performed += DownArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
+            uiControl.cancelAct.performed += CanselAction;
         }
 
         public void UpArrowAction(InputAction.CallbackContext context)
@@ -88,11 +86,11 @@ public class ShopUIController : MonoBehaviour
 
             nowSelectNum = Mathf.Clamp(nowSelectNum,0,maxSelectNum);
 
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
+            Vector2 arrowPosi = uiControl.selectArrowRect.localPosition;
 
             arrowPosi.y = arrowDefaultYPosi - (nowSelectNum*70);
 
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            uiControl.selectArrowRect.localPosition = arrowPosi;
         }
 
         public void DownArrowAction(InputAction.CallbackContext context)
@@ -101,11 +99,11 @@ public class ShopUIController : MonoBehaviour
 
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
+            Vector2 arrowPosi = uiControl.selectArrowRect.localPosition;
 
             arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
 
-            uiController.selectArrowRect.localPosition = arrowPosi;
+            uiControl.selectArrowRect.localPosition = arrowPosi;
         }
 
         public void ConfirmAction(InputAction.CallbackContext context)
@@ -131,19 +129,21 @@ public class ShopUIController : MonoBehaviour
                     break;
             }
 
-            uiController.StateTranstion(ShopState.SelectBuyGoods);
+            uiControl.StateTranstion(ShopState.SelectBuyGoods);
 
-            uiController.goodsScrollView.InitializeScrollView(goods);
-            uiController.goodsScrollView.OpenScrollView();
+            uiControl.goodsScrollView.InitializeScrollView(goods);
+            uiControl.goodsScrollView.OpenScrollView();
 
         }
 
         public void CanselAction(InputAction.CallbackContext context)
         {
-            uiController.GetComponent<CanvasGroup>().DOFade(0f, 0.4f);
+            //uiController.GetComponent<CanvasGroup>().DOFade(0f, 0.4f);
+
+            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.Terminal,DockImageTransition.MenuType.Shop);
 
             FindObjectOfType<MainMenuUIController>().StateTranstion(MainMenuState.MainMenuStateEnum.SelectMenu);
-            uiController.StateTranstion(ShopState.Wait);
+            uiControl.StateTranstion(ShopState.Wait);
 
             //オートセーブ
             SaveDataManager.instance.SaveFileWriteAsync();
@@ -156,9 +156,9 @@ public class ShopUIController : MonoBehaviour
         //コンストラクタ　初期化
         public SelectGoodsState(ShopUIController controller)
         {
-            State = ShopState.SelectBuyGoods;
+            state = ShopState.SelectBuyGoods;
 
-            uiController = controller;
+            uiControl = controller;
 
             actionDic = new Dictionary<string, Action>()
             {
@@ -173,18 +173,18 @@ public class ShopUIController : MonoBehaviour
 
         public override void OnEnter()
         {
-            uiController.upArrowAct.performed += UpArrowAction;
-            uiController.downArrowAct.performed += DownArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
-            uiController.canselAct.performed += CanselAction;
+            uiControl.upArrowAct.performed += UpArrowAction;
+            uiControl.downArrowAct.performed += DownArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
+            uiControl.cancelAct.performed += CanselAction;
         }
 
         public override void OnExit()
         {
-            uiController.upArrowAct.performed -= UpArrowAction;
-            uiController.downArrowAct.performed -= DownArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
-            uiController.canselAct.performed-=CanselAction;
+            uiControl.upArrowAct.performed -= UpArrowAction;
+            uiControl.downArrowAct.performed -= DownArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
+            uiControl.cancelAct.performed-=CanselAction;
         }
 
         private void InfoOnClick(object[] args)
@@ -196,36 +196,36 @@ public class ShopUIController : MonoBehaviour
 
         private void OpenGoodsStatus(ItemData selectGoods)
         {
-            uiController.goodsStatus.InitializeUI(selectGoods);
-            uiController.goodsStatus.OpenWindow();
+            uiControl.goodsStatus.InitializeUI(selectGoods);
+            uiControl.goodsStatus.OpenWindow();
         }
 
         private void CloseGoodsStatus()
         {
-            uiController.goodsStatus.CloseWindow();
+            uiControl.goodsStatus.CloseWindow();
         }
 
         private void UpArrowAction(InputAction.CallbackContext context)
         {
-            uiController.goodsScrollView.ChangeForcus(-1);
+            uiControl.goodsScrollView.ChangeForcus(-1);
         }
 
         private void DownArrowAction(InputAction.CallbackContext context)
         {
-            uiController.goodsScrollView.ChangeForcus(1);
+            uiControl.goodsScrollView.ChangeForcus(1);
         }
 
         private void ConfirmAction(InputAction.CallbackContext context)
         {
-            uiController.StateTranstion(ShopState.PurchaseCheck);
+            uiControl.StateTranstion(ShopState.PurchaseCheck);
         }
 
         private void CanselAction(InputAction.CallbackContext context)
         {
-            uiController.goodsScrollView.CloseScrollView();
-            uiController.goodsStatus.CloseWindow();
+            uiControl.goodsScrollView.CloseScrollView();
+            uiControl.goodsStatus.CloseWindow();
 
-            uiController.StateTranstion(ShopState.SelectGenre);
+            uiControl.StateTranstion(ShopState.SelectGenre);
         }
     }
 
@@ -236,55 +236,47 @@ public class ShopUIController : MonoBehaviour
         //コンストラクタ　初期化
         public PurchaseCheckState(ShopUIController controller)
         {
-            State = ShopState.PurchaseCheck;
+            state = ShopState.PurchaseCheck;
 
-            uiController = controller;
-
-            actionDic = new Dictionary<string, Action>()
-            {
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-            };
+            uiControl = controller;
         }
 
         public override void OnEnter()
         {
             //お金が足りているかどうかチェック
-            purchaseGoods = uiController.goodsScrollView.forcusInfo.goodsData;
+            purchaseGoods = uiControl.goodsScrollView.forcusInfo.goodsData;
 
             //お金が足りていたら
             if (SaveDataManager.instance.saveData.haveCol>=purchaseGoods.price)
             {
-                uiController.purchaseCheck.InitializeShopUI(uiController.goodsScrollView.forcusInfo.goodsData);
-                uiController.purchaseCheck.OpenWindow();
+                uiControl.purchaseCheck.InitializeShopUI(uiControl.goodsScrollView.forcusInfo.goodsData);
+                uiControl.purchaseCheck.OpenWindow();
             }
             else
             {
-                uiController.purchaseError.OpenWindow();
+                uiControl.purchaseError.OpenWindow();
             }
 
-            uiController.leftArrowAct.performed += LeftArrowAction;
-            uiController.rightArrowAct.performed += RightArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
+            uiControl.leftArrowAct.performed += LeftArrowAction;
+            uiControl.rightArrowAct.performed += RightArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
         }
 
         public override void OnExit()
         {
-            uiController.leftArrowAct.performed -= LeftArrowAction;
-            uiController.rightArrowAct.performed -= RightArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
+            uiControl.leftArrowAct.performed -= LeftArrowAction;
+            uiControl.rightArrowAct.performed -= RightArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
         }
 
         private void LeftArrowAction(InputAction.CallbackContext context)
         {
-            uiController.purchaseCheck.ChangeForcus(-1);
+            uiControl.purchaseCheck.ChangeForcus(-1);
         }
 
         private void RightArrowAction(InputAction.CallbackContext context)
         {
-            uiController.purchaseCheck.ChangeForcus(1);
+            uiControl.purchaseCheck.ChangeForcus(1);
         }
 
         private void ConfirmAction(InputAction.CallbackContext context)
@@ -293,30 +285,30 @@ public class ShopUIController : MonoBehaviour
             if (SaveDataManager.instance.saveData.haveCol >= purchaseGoods.price)
             {
                 //Yesを選択していたらお金を払いアイテムを手に入れる
-                if (uiController.purchaseCheck.isConfirm)
+                if (uiControl.purchaseCheck.isConfirm)
                 {
                     SaveDataManager.instance.saveData.ColChange(-purchaseGoods.price);
 
                     SaveDataManager.instance.saveData.AddItem(purchaseGoods.ItemNumber);
 
-                    uiController.colText.text = SaveDataManager.instance.saveData.haveCol + " Col";
+                    uiControl.colText.text = SaveDataManager.instance.saveData.haveCol + " Col";
                 }
 
                 //Noを選択していたら何もせず戻る
-                uiController.purchaseCheck.CloseWindow();
+                uiControl.purchaseCheck.CloseWindow();
             }
             else
             {
-                uiController.purchaseError.CloseWindow();
+                uiControl.purchaseError.CloseWindow();
             }
 
-            uiController.StateTranstion(ShopState.SelectBuyGoods);
+            uiControl.StateTranstion(ShopState.SelectBuyGoods);
         }
     }
 
     private List<ShopControllerState> States = new List<ShopControllerState>();
 
-    private ShopControllerState nowState;
+    private ShopControllerState nowState,beforeState;
 
     public RectTransform selectArrowRect;
     public CanvasGroup thisGroup;
@@ -328,7 +320,9 @@ public class ShopUIController : MonoBehaviour
 
     public TextMeshProUGUI colText;
 
-    public InputAction upArrowAct, downArrowAct,leftArrowAct,rightArrowAct, confirmAct,canselAct;
+    public DockImageTransition transitionManager;
+
+    public InputAction upArrowAct, downArrowAct,leftArrowAct,rightArrowAct, confirmAct,cancelAct;
 
     // Start is called before the first frame update
     void Start()
@@ -341,14 +335,14 @@ public class ShopUIController : MonoBehaviour
         leftArrowAct = testControl.UI.LeftArrow;
         rightArrowAct = testControl.UI.RightArrow;
         confirmAct = testControl.UI.Confirm;
-        canselAct = testControl.UI.Cansel;
+        cancelAct = testControl.UI.Cancel;
 
         upArrowAct.Enable();
         downArrowAct.Enable();
         leftArrowAct.Enable();
         rightArrowAct.Enable(); 
         confirmAct.Enable();
-        canselAct.Enable();
+        cancelAct.Enable();
 
         States.Add(new WaitState(this));
         States.Add(new SelectGenreState(this));
@@ -372,11 +366,12 @@ public class ShopUIController : MonoBehaviour
     {
         nowState.OnExit();
 
-        ShopControllerState newState = States.First(state => state.State == transitState);
+        ShopControllerState newState = States.First(state => state.state == transitState);
 
         //ヌルチェ
         if (newState == null) throw new System.Exception("遷移するステートがないらしいよ");
 
+        beforeState = nowState;
         nowState = newState;
 
         nowState.OnEnter();
@@ -408,9 +403,9 @@ public abstract class ShopControllerState : IState
         PurchaseCheck,
     }
 
-    public ShopState State;
+    public ShopState state;
 
-    protected ShopUIController uiController;
+    protected ShopUIController uiControl;
 
     //呼べる関数をまとめるDictionary
     protected Dictionary<string, Action> actionDic;
