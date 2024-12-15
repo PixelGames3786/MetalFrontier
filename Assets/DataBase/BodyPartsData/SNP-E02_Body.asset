@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: SNP-E02_Body
   m_EditorClassIdentifier: 
   ItemNumber: 322
+  itemType: 0
   price: 0
   itemName: "SNP-E02 \u80F4\u4F53\u90E8"
   Description: "\u306A\u3057"
   Type: 2
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: UpperArm_L_Mesh
@@ -33,7 +36,7 @@ MonoBehaviour:
   shotAccuracy: 2
   boostAmout: 10
   boostUseRate: 0
-  boostRecoverRate: 50
+  boostRecoverRate: 1
   physicalRes: 0
   beamRes: 0
   maxVel: {x: 0, y: 0, z: 0}

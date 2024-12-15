@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: DF-1_Body
   m_EditorClassIdentifier: 
   ItemNumber: 312
+  itemType: 0
   price: 0
   itemName: "DF-1 \u80F4\u4F53\u90E8"
   Description: "\u306A\u3057"
   Type: 1
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: Body_Mesh
@@ -30,7 +33,7 @@ MonoBehaviour:
   shotAccuracy: 0
   boostAmout: 10
   boostUseRate: 0
-  boostRecoverRate: 40
+  boostRecoverRate: 0.8
   physicalRes: 0.1
   beamRes: 0.1
   maxVel: {x: 0, y: 0, z: 0}

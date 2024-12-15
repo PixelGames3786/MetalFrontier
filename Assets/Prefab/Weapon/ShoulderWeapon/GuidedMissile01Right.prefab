@@ -166,7 +166,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 8de218f6178d4d6499ea6ed36359e3d8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -435,7 +435,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 8de218f6178d4d6499ea6ed36359e3d8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -538,6 +538,8 @@ MonoBehaviour:
   weaponData: {fileID: 11400000, guid: f522c581369159b4d87c802dcccf682e, type: 2}
   useInterval: 0
   intervalElapseTime: 0
+  maxBulletNum: 0
+  leftBulletNum: 0
   legacyStatus:
     maxHP: 0
     moveSpeed: 0

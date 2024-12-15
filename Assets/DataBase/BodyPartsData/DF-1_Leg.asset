@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: DF-1_Leg
   m_EditorClassIdentifier: 
   ItemNumber: 315
+  itemType: 0
   price: 0
   itemName: "DF-1 \u811A\u90E8"
   Description: "\u306A\u3057"
   Type: 4
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: Hips_Mesh

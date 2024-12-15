@@ -12,21 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8569a1312ccecc48b2cd53c32c61dd4, type: 3}
   m_Name: GatlingGun01
   m_EditorClassIdentifier: 
-  ItemNumber: 503
+  ItemNumber: 603
   itemType: 1
-  price: 0
+  price: 150
   itemName: "\u30AC\u30C8\u30EA\u30F3\u30B001"
-  Description: "\u306A\u3057"
+  Description: "\u5727\u5012\u7684\u306A\u9023\u5C04\u6027\u80FD\u3092\u8A87\u308B\u591A\u7832\u8EAB\u5F0F\u6A5F\u95A2\u7832\u3002\u6301\u7D9A\u706B\u529B\u3067\u6575\u3092\u5236\u5727\u3059\u308B\u306E\u306B\u9069\u3057\u3066\u3044\u308B\u3002"
   setType: 1
   weaponType: 0
   attackType: 0
+  modelName: GT-301
   maxModuleSlot: 0
   minModuleSlot: 0
   bulletSpeed: 80
   damage: 10
   shotBlur: 0.1
   useInterval: 0.1
-  defaultBullet: 100
+  defaultBullet: 600
   setPosiWithPrefab:
     _list:
     - key: 0

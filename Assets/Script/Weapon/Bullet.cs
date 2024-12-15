@@ -15,6 +15,9 @@ public class Bullet : MonoBehaviour
     [SerializeField]
     public AttackData attackData;
 
+    [SerializeField]
+    private GameObject particlePrefab;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -29,6 +32,11 @@ public class Bullet : MonoBehaviour
         {
             //damageAble.Damage(bulletPower);
             damageAble.Damage(attackData);
+
+            //パーティクルを作成
+            GameObject particle = Instantiate(particlePrefab);
+
+            particle.transform.position = collision.contacts[0].point;
 
             cts.Cancel();
             cts.Dispose();

@@ -1,0 +1,10 @@
+番号,アイテムファイル名,アイテム名,型番名,説明,武器種類,装備箇所,攻撃種類,値段,弾速,ダメージ,射撃ブレ,使用間隔,弾数,装備位置/プレハブ名1,装備位置/プレハブ名2
+601,Pistol01,ピストル01,P-101,コンパクトな設計で近距離から中距離まで安定した威力を発揮する。初心者向けの武器。,Gun,Arm,Physicial,100,150,20,0.05,0.2,350,LeftArm/Pistol01,RightArm/Pistol01
+602,ShoulderRocket01,肩ロケット01,RL-202,シンプルな構造ながら高い爆発力を誇り、低速ながら確実な破壊力を提供する。,Rocket,Shoulder,Physicial,200,500,25,0,1.5,40,LeftShoulder/ShoulderRocket01Left,RightShoulder/ShoulderRocket01Right
+603,GatlingGun01,ガトリング01,GT-301,圧倒的な連射性能を誇る多砲身式機関砲。持続火力で敵を制圧するのに適している。,Gun,Arm,Physicial,150,80,10,0.1,0.1,600,LeftArm/GatlingGun01,RightArm/GatlingGun01
+604,SniperRifle01,スナイパーライフル01,SR-001,長距離射撃に最適化された高精度ライフル。単発で高い威力を発揮する。,Gun,Arm,Physicial,150,250,35,0.02,1,120,LeftArm/SniperRifle01,RightArm/SniperRifle01
+605,ShotGun01,ショットガン01,SG-150,短距離で圧倒的な威力を発揮する散弾銃。接近戦や複数の敵が密集した場面で特に効果的。,Gun,Arm,Physicial,150,100,10,0.15,0.8,100,LeftArm/ShotGun01,RightArm/ShotGun01
+606,ShoulderCanon01,肩キャノン01,CN-405,高威力の単発弾を放つ基本装備。遠距離からでも大きなダメージを与えられる。,Gun,Shoulder,Physicial,150,200,40,0.05,1,100,LeftShoulder/ShoulderCanon01Left,RightShoulder/ShoulderCanon01Right
+607,GuidedMissile01,誘導ミサイル01,HM-220,発射後に目標を自動追尾するミサイルシステムを搭載。高い命中率を誇り、移動する敵にも効果的です。ただし、誘導性能に頼る分、爆発力は控えめです。,Gun,Shoulder,Physicial,150,30,20,0,10,180,LeftShoulder/GuidedMissile01Left,RightShoulder/GuidedMissile01Right
+608,Pistol01-DU,ピストル01-DU,P-101-DU,コンパクトな設計で近距離から中距離まで安定した威力を発揮する。弾数が増加したが、ダメージが減少しブレが上昇したモデル。,Gun,Arm,Physicial,120,150,18,0.05,0.2,450,LeftArm/Pistol01,RightArm/Pistol01
+609,Pistol01-AR,ピストル01-AR,P-101-AR,コンパクトな設計で近距離から中距離まで安定した威力を発揮する。精度と連射速度を上昇させたモデル。,Gun,Arm,Physicial,120,150,20,0.04,0.15,320,LeftArm/Pistol01,RightArm/Pistol01

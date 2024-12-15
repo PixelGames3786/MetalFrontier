@@ -58,20 +58,19 @@ public class ShoulderRocket01 : WeaponBase
         canShot = false;
 
         Transform bulletObj = bullets[bulletLeft-1];
+        ShoulderRocket01Bullet bullet = bulletObj.GetComponent<ShoulderRocket01Bullet>();
 
         //自身のコライダーとぶつからないようにする
         //自身に当たらないように
-        Physics.IgnoreCollision(bulletObj.GetComponent<Collider>(), controller.GetComponent<Collider>(), true);
+        Physics.IgnoreCollision(bullet.bulletObj.GetComponent<Collider>(), controller.GetComponent<Collider>(), true);
 
         //ダメージ登録
-        ShoulderRocket01Bullet bullet = bulletObj.GetComponentInChildren<ShoulderRocket01Bullet>();
-
         bullet.attackData.type = weaponData.attackType;
         bullet.attackData.damage = weaponData.damage;
 
         Vector3 shotPower=pivotObj.forward * weaponData.bulletSpeed;
 
-        bulletObj.GetComponent<ShoulderRocket01Bullet>().Shot(target,shotPower);
+        bullet.Shot(target,shotPower);
 
         bulletLeft--;
 

@@ -45,10 +45,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2f0888d04aa45d42ab68031bd45b787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemNum: 503
   weaponData: {fileID: 11400000, guid: 015c127ab8da5124db12d6071e77b5ce, type: 2}
   useInterval: 0.2
-  intervalWaitTime: 0
+  intervalElapseTime: 0
+  maxBulletNum: 0
+  leftBulletNum: 0
   legacyStatus:
     maxHP: 0
     moveSpeed: 0
@@ -72,9 +73,6 @@ MonoBehaviour:
     type: 3}
   ShotPosi: {fileID: 6664762421485482750}
   pivotObj: {fileID: 404320647961288656}
-  shotBlur: 0.1
-  bulletSpeed: 80
-  shotInterval: 0.2
 --- !u!1 &7395276847506306567
 GameObject:
   m_ObjectHideFlags: 0
@@ -138,7 +136,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 8de218f6178d4d6499ea6ed36359e3d8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

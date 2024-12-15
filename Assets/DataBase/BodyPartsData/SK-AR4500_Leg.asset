@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: SK-AR4500_Leg
   m_EditorClassIdentifier: 
   ItemNumber: 320
+  itemType: 0
   price: 0
   itemName: "SK-AR4500 \u811A\u90E8"
   Description: "\u306A\u3057"
   Type: 1
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: Body_Mesh
-      value: {fileID: -2393547752436505059, guid: 404232a0da6a95a49a32f138f2acdb7f,
+      value: {fileID: 741243933160430073, guid: cd3076d8334b908419f19bf1e190bb9c,
         type: 3}
   hpFactor: 0
   moveSpeed: 750

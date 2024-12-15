@@ -155,7 +155,7 @@ public class ItemDataImporter : EditorWindow
         BodyPartsData item = ScriptableObject.CreateInstance<BodyPartsData>();
 
 
-
+        item.itemType = ItemData.ItemType.BodyParts;
         item.ItemNumber = itemNum;
         item.itemName = itemName;
         item.Description = itemDescription;
@@ -301,22 +301,24 @@ public class ItemDataImporter : EditorWindow
         int itemNum = int.Parse(values[0]);
         string fileName = values[1];
         string itemName = values[2];
-        string itemDescription = values[3];
-        WeaponPartsData.WeaponType weaponType = (WeaponPartsData.WeaponType)Enum.Parse(typeof(WeaponPartsData.WeaponType), values[4]);
-        WeaponPartsData.SetType setType = (WeaponPartsData.SetType)Enum.Parse(typeof(WeaponPartsData.SetType), values[5]);
-        WeaponPartsData.AttackType attackType = (WeaponPartsData.AttackType)Enum.Parse(typeof(WeaponPartsData.AttackType), values[6]);
-        int itemPrice = int.Parse(values[7]);
-        float bulletSpeed = float.Parse(values[8]);
-        float damage = float.Parse(values[9]);
-        float shotBlur= float.Parse(values[10]);
-        float useInterval = float.Parse(values[11]);
-        int defaultBullet = int.Parse(values[12]);
+        string modelNumber= values[3];
+        string itemDescription = values[4];
+        WeaponPartsData.WeaponType weaponType = (WeaponPartsData.WeaponType)Enum.Parse(typeof(WeaponPartsData.WeaponType), values[5]);
+        WeaponPartsData.SetType setType = (WeaponPartsData.SetType)Enum.Parse(typeof(WeaponPartsData.SetType), values[6]);
+        WeaponPartsData.AttackType attackType = (WeaponPartsData.AttackType)Enum.Parse(typeof(WeaponPartsData.AttackType), values[7]);
+        int itemPrice = int.Parse(values[8]);
+        float bulletSpeed = float.Parse(values[9]);
+        float damage = float.Parse(values[10]);
+        float shotBlur= float.Parse(values[11]);
+        float useInterval = float.Parse(values[12]);
+        int defaultBullet = int.Parse(values[13]);
 
 
         WeaponPartsData item = ScriptableObject.CreateInstance<WeaponPartsData>();
 
         item.ItemNumber = itemNum;
         item.itemName = itemName;
+        item.modelName= modelNumber;
         item.Description = itemDescription;
         item.price = itemPrice;
         item.weaponType = weaponType;
@@ -332,7 +334,7 @@ public class ItemDataImporter : EditorWindow
         item.setPosiWithPrefab =new SerializableDictionary<LegacySettingData.WeaponSetPosi, GameObject>();
 
         //セット箇所とプレハブを取得しセット　1箇所目
-        string[] setPosiPrefab = values[13].Split('/');
+        string[] setPosiPrefab = values[14].Split('/');
 
         GameObject targetObj = null;
         LegacySettingData.WeaponSetPosi weaponSetPosi= (LegacySettingData.WeaponSetPosi)Enum.Parse(typeof(LegacySettingData.WeaponSetPosi), setPosiPrefab[0]);
@@ -341,7 +343,7 @@ public class ItemDataImporter : EditorWindow
         item.setPosiWithPrefab.Add(weaponSetPosi,targetObj);
 
         //セット箇所とプレハブを取得しセット　2箇所目
-        setPosiPrefab = values[14].Split('/');
+        setPosiPrefab = values[15].Split('/');
 
         weaponSetPosi = (LegacySettingData.WeaponSetPosi)Enum.Parse(typeof(LegacySettingData.WeaponSetPosi), setPosiPrefab[0]);
 

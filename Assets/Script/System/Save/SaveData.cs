@@ -3,12 +3,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
-using Unity.VisualScripting.FullSerializer;
-using UnityEditor;
 using UnityEngine;
 using PartsType = BodyPartsData.PartsType;
-using Random = UnityEngine.Random;
 
 public class SaveData
 {
@@ -70,32 +66,26 @@ public class SaveData
     {
         settingData = new LegacySettingData();
 
+        settingData.RefleshWeaponsNumber();
+        settingData.RefleshPartsNumber();
+
         missionNumList.Add(1);
 
         //TODO デバッグ用に最初にぱーつをいくつか手に入れる
-        AddItemRange(new List<int> { 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 501,507, 502,506 });
+        AddItemRange(new List<int> { 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 601,607, 602,606 });
 
-        shopGoodsNumList.Add(501);
-        shopGoodsNumList.Add(502);
-        shopGoodsNumList.Add(502);
-        shopGoodsNumList.Add(502);
-        shopGoodsNumList.Add(502);
-        shopGoodsNumList.Add(502);
-        shopGoodsNumList.Add(502);
-        shopGoodsNumList.Add(502);
-        shopGoodsNumList.Add(502);
+        shopGoodsNumList.Add(601);
+        shopGoodsNumList.Add(602);
         shopGoodsNumList.Add(301);
 
-        settingData.SetBodyParts(PartsType.Head, AddItem(301));
-        settingData.SetBodyParts(PartsType.Body, AddItem(302));
-        settingData.SetBodyParts(PartsType.LeftArm, AddItem(303));
-        settingData.SetBodyParts(PartsType.RightArm, AddItem(304));
-        settingData.SetBodyParts(PartsType.Leg, AddItem(305));
+        LegacyPartsChange(PartsType.Head, AddItem(301));
+        LegacyPartsChange(PartsType.Body, AddItem(302));
+        LegacyPartsChange(PartsType.LeftArm, AddItem(303));
+        LegacyPartsChange(PartsType.RightArm, AddItem(304));
+        LegacyPartsChange(PartsType.Leg, AddItem(305));
 
-        settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.LeftArm, WeaponsDataList[0]);
-        settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.RightArm, null);
-        settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.LeftShoulder, WeaponsDataList[1]);
-        settingData.SetWeaponParts(LegacySettingData.WeaponSetPosi.RightShoulder, null);
+        WeaponPartsChange(LegacySettingData.WeaponSetPosi.LeftArm, WeaponsDataList[0]);
+        WeaponPartsChange(LegacySettingData.WeaponSetPosi.LeftShoulder, WeaponsDataList[1]);
     }
 
 
@@ -111,22 +101,33 @@ public class SaveData
 
     public void WeaponPartsChange(LegacySettingData.WeaponSetPosi setPosi, HavingItem having)
     {
-        //何も装備されていない部位に装備する場合
-        if (settingData.WeaponsNumber[setPosi] == null)
+        if (having.equiped)
         {
-            settingData.SetWeaponParts(setPosi,having);
+            Debug.Log("装備中であるためアイテムを外す");
 
-            having.equiped = true;
-
-            return;
+            WeaponPartsRemove(setPosi, having);
         }
-        else //既になんらかのパーツが装備されている部位に装備する場合、前のパーツの装備状況を外す
+        else
         {
-            settingData.WeaponsNumber[setPosi].equiped = false;
+            Debug.Log("装備中でないためアイテムを交換");
 
-            settingData.SetWeaponParts(setPosi, having);
+            //何も装備されていない部位に装備する場合
+            if (settingData.WeaponsNumber[setPosi] == null)
+            {
+                settingData.SetWeaponParts(setPosi, having);
 
-            settingData.WeaponsNumber[setPosi].equiped = true;
+                having.equiped = true;
+
+                return;
+            }
+            else //既になんらかのパーツが装備されている部位に装備する場合、前のパーツの装備状況を外す
+            {
+                settingData.WeaponsNumber[setPosi].equiped = false;
+
+                settingData.SetWeaponParts(setPosi, having);
+
+                settingData.WeaponsNumber[setPosi].equiped = true;
+            }
         }
     }
 
@@ -145,7 +146,6 @@ public class SaveData
         else
         {
             Debug.Log("外せないなぁ！");
-
         }
     }
 
@@ -205,163 +205,5 @@ public class SaveData
     public void ColChange(int changeVal)
     {
         haveCol += changeVal;
-    }
-}
-
-public class LegacySettingData
-{
-    public enum WeaponSetPosi
-    {
-        LeftArm,
-        RightArm,
-        LeftShoulder,
-        RightShoulder,
-    }
-
-    //パーツの位置とHavingItemのUniqueIdの辞書
-    //セーブロードによってHavingItemインスタンスが再生成され同じインスタンスとして扱われなくなるのを回避
-    [JsonProperty]
-    private Dictionary<PartsType, string> partsPairs = new Dictionary<PartsType, string>();
-
-    //レガシーパーツ　部位別アイテム番号
-    //public Dictionary<BodyPartsData.PartsType, HavingItem> PartsNumber = new Dictionary<BodyPartsData.PartsType, HavingItem>();
-    [JsonIgnore]
-    public Dictionary<PartsType, HavingItem> PartsNumber = new Dictionary<PartsType, HavingItem>();
-
-    //武器の位置とHavingItemのuniqueIdの辞書　理由は上記
-    [JsonProperty]
-    private Dictionary<WeaponSetPosi, string> weaponsPairs = new Dictionary<WeaponSetPosi, string>();
-
-    //武器パーツ　部位別アイテム番号
-    [JsonIgnore]
-    public Dictionary<WeaponSetPosi, HavingItem> WeaponsNumber = new Dictionary<WeaponSetPosi, HavingItem>();
-
-    //パーツ設定類
-    public void SetBodyParts(PartsType type, HavingItem having)
-    {
-        if (having == null)
-        {
-            partsPairs[type] = null;
-        }
-        else
-        {
-            partsPairs[type] = having.uniqueId;
-        }
-
-        RefleshPartsNumber();
-    }
-
-    public void SetWeaponParts(WeaponSetPosi posi, HavingItem having)
-    {
-        if (having==null)
-        {
-            weaponsPairs[posi] = null;
-        }
-        else
-        {
-            weaponsPairs[posi] = having.uniqueId;
-        }
-
-        RefleshWeaponsNumber();
-    }
-
-    //PartsNumber辞書をUniqueIdの辞書に合わせて設定する
-    public void RefleshPartsNumber()
-    {
-        Dictionary<PartsType, HavingItem> dic = new Dictionary<PartsType, HavingItem>();
-
-        foreach (KeyValuePair<PartsType, string> keyValue in partsPairs)
-        {
-            if (keyValue.Value == null) dic[keyValue.Key]=null; 
-            else dic[keyValue.Key] = SaveDataManager.instance.saveData.GetItem(keyValue.Value);
-        }
-
-        PartsNumber = dic;
-    }
-
-    public void RefleshWeaponsNumber()
-    {
-        Dictionary<WeaponSetPosi, HavingItem> dic = new Dictionary<WeaponSetPosi, HavingItem>();
-
-        foreach (KeyValuePair<WeaponSetPosi, string> keyValue in weaponsPairs)
-        {
-            if (keyValue.Value == null) dic[keyValue.Key] = null;
-            else dic[keyValue.Key] = SaveDataManager.instance.saveData.GetItem(keyValue.Value);
-        }
-
-        WeaponsNumber = dic;
-    }
-}
-
-public class HavingItem
-{
-    public string uniqueId;
-
-    public int itemNumber;
-
-    //装備済みを示す
-    public bool equiped;
-
-    public int moduleSlotNum=0; //モジュールが設定可能なスロット数
-
-    [JsonIgnore]
-    private ItemData _itemData;
-
-    [JsonIgnore]
-    public ItemData itemData
-    {
-        get
-        {
-            if (_itemData == null)
-            {
-                _itemData = GetItem();
-            }
-            return _itemData;
-        }
-    }
-
-    public HavingItem(int num)
-    {
-        uniqueId = Guid.NewGuid().ToString();
-
-        itemNumber = num;
-
-        _itemData = GetItem();
-
-        //アイテムの種類がBodyParts,またはWeaponだったらモジュールスロット数をランダムに出す
-        switch (_itemData.itemType)
-        {
-            case ItemData.ItemType.BodyParts:
-
-                BodyPartsData bodyData = itemData as BodyPartsData;
-
-                moduleSlotNum = Random.Range(bodyData.minModuleSlot,bodyData.maxModuleSlot);
-
-                break;
-
-            case ItemData.ItemType.WeaponParts:
-
-                WeaponPartsData weaponData = itemData as WeaponPartsData;
-
-                moduleSlotNum = Random.Range(weaponData.minModuleSlot, weaponData.maxModuleSlot);
-
-                break;
-        }
-    }
-
-    [JsonConstructor]
-    public HavingItem(string uniqueId, int itemNumber, bool equipped, int moduleSlotNum)
-    {
-        this.uniqueId = uniqueId;
-        this.itemNumber = itemNumber;
-        this.equiped = equipped;
-        this.moduleSlotNum = moduleSlotNum;
-
-        _itemData = GetItem();
-    }
-
-    public ItemData GetItem()
-    {
-        return DataBaseController.instance.itemDataBase.GetItem(itemNumber);
     }
 }

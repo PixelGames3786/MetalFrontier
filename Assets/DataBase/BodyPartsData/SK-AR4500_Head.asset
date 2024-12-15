@@ -13,14 +13,18 @@ MonoBehaviour:
   m_Name: SK-AR4500_Head
   m_EditorClassIdentifier: 
   ItemNumber: 316
+  itemType: 0
   price: 0
   itemName: "SK-AR4500 \u982D\u90E8"
   Description: "\u306A\u3057"
   Type: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: Head_Mesh
-      value: {fileID: 0}
+      value: {fileID: 5243742802224932056, guid: e18f4ec27e0788a4fab534a57ec3cfa9,
+        type: 3}
   hpFactor: 0
   moveSpeed: 50
   boostSpeed: 75

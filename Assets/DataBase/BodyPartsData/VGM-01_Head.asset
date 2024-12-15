@@ -13,14 +13,18 @@ MonoBehaviour:
   m_Name: VGM-01_Head
   m_EditorClassIdentifier: 
   ItemNumber: 326
+  itemType: 0
   price: 0
   itemName: "VGM-01 \u982D\u90E8"
   Description: "\u306A\u3057"
   Type: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: Head_Mesh
-      value: {fileID: 0}
+      value: {fileID: -865412199123941540, guid: d5f887334a575b944a97394dd2560e69,
+        type: 3}
   hpFactor: 150
   moveSpeed: 0
   boostSpeed: 0

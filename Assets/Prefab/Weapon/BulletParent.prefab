@@ -133,8 +133,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea3817bcb05cb634aba79f4ed6bdc98f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bulletPower: 600
   lifeTime: 5
   attackData:
     type: 0
     damage: 10
+  particlePrefab: {fileID: 7407547178043413950, guid: e92b639a73f7c8b4fabf4892ca1470b0,
+    type: 3}

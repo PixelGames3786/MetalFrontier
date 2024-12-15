@@ -27,7 +27,7 @@ public class MissileBullet : MonoBehaviour
 
     private bool isHoming=false;
 
-    public GameObject bulletObj;
+    public GameObject bulletObj,particlePrefab;
     public Collider bulletCol;
 
     public LineRenderer lineRenderer;
@@ -89,7 +89,7 @@ public class MissileBullet : MonoBehaviour
         }
 
         //まっすぐ進む
-        GetComponent<Rigidbody>().velocity = transform.forward*speed;
+        rb.velocity = transform.forward*speed;
     }
 
     public void Shot(Transform tag, float bulletSpeed)
@@ -110,13 +110,16 @@ public class MissileBullet : MonoBehaviour
 
     public void OnCollisionEnter(Collision collision)
     {
-        print(collision.gameObject.name);
-
         IDamageable damageAble = collision.transform.GetComponent<IDamageable>();
 
         if (damageAble != null)
         {
             damageAble.Damage(attackData);
+
+            //パーティクルを作成
+            GameObject particle = Instantiate(particlePrefab);
+
+            particle.transform.position = collision.contacts[0].point;
 
             cts.Cancel();
             cts.Dispose();

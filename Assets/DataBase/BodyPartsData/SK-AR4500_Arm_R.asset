@@ -13,26 +13,29 @@ MonoBehaviour:
   m_Name: SK-AR4500_Arm_R
   m_EditorClassIdentifier: 
   ItemNumber: 319
+  itemType: 0
   price: 0
   itemName: "SK-AR4500 \u53F3\u8155\u90E8"
   Description: "\u306A\u3057"
   Type: 4
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: Hips_Mesh
-      value: {fileID: 5423507823662825503, guid: d48e6049053c4184d8d33224e8985cf0,
+      value: {fileID: -3362737036013582113, guid: 1540109bbb7466b4ca8fb12662f336d7,
         type: 3}
     - key: UpperLeg_L_Mesh
-      value: {fileID: -4462490496568913832, guid: 422704d041800d54f90fbcf4d41a00f4,
+      value: {fileID: -7357484269791441502, guid: d9ca35410f3cf2b408d5aaccfd9beda5,
         type: 3}
     - key: LowerLeg_L_Mesh
-      value: {fileID: 3363573422548942696, guid: 4d65e10205d7ee449a7de940930bf8a7,
+      value: {fileID: 390277843570068014, guid: 524e2a29b6dbc7d4db587221ce1ba9ed,
         type: 3}
     - key: UpperLeg_R_Mesh
-      value: {fileID: 8487710163846300527, guid: 036513ba7a21d954fa81decd9cff3c28,
+      value: {fileID: 8850591033588885523, guid: e63e64457e3233642af7de439ea8726b,
         type: 3}
     - key: LowerLeg_R_Mesh
-      value: {fileID: -4939872482838755044, guid: 8d0a23c0a6dbeb143af8ee2712e5e2a4,
+      value: {fileID: 9185107457923759564, guid: 513c8b4b31f3e1940a06cee6af424384,
         type: 3}
   hpFactor: 0
   moveSpeed: 75

@@ -30,6 +30,8 @@ public class WeaponPartsData : ItemData
     public WeaponType weaponType;
     public AttackType attackType;
 
+    public string modelName;
+
     public int maxModuleSlot;
     public int minModuleSlot;
 

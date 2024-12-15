@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: NR-1_Arm_R
   m_EditorClassIdentifier: 
   ItemNumber: 304
+  itemType: 0
   price: 0
   itemName: "NR-1 \u53F3\u8155\u90E8"
   Description: "\u306A\u3057"
   Type: 3
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: UpperArm_R_Mesh

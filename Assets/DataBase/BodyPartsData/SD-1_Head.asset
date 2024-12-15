@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: SD-1_Head
   m_EditorClassIdentifier: 
   ItemNumber: 306
+  itemType: 0
   price: 0
   itemName: "SD-1 \u982D\u90E8"
   Description: "\u306A\u3057"
   Type: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: Head_Mesh

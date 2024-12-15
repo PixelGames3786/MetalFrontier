@@ -13,17 +13,20 @@ MonoBehaviour:
   m_Name: SK-AR4500_Arm_L
   m_EditorClassIdentifier: 
   ItemNumber: 318
+  itemType: 0
   price: 0
   itemName: "SK-AR4500 \u5DE6\u8155\u90E8"
   Description: "\u306A\u3057"
   Type: 3
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: UpperArm_R_Mesh
-      value: {fileID: 7767211224823848154, guid: e4a5a39a82209cb4b8cd0b1a0b489154,
+      value: {fileID: -7689809343909699383, guid: 02a0f977f9fe6754cb927ace381cc6e5,
         type: 3}
     - key: LowerArm_R_Mesh
-      value: {fileID: -6948649102717789510, guid: e379e800113e1cf4ca1c5bcdbdcef900,
+      value: {fileID: -5292728434896797506, guid: 358c0efa7bee85e46b0b7f1a7a06c623,
         type: 3}
   hpFactor: 0
   moveSpeed: 75

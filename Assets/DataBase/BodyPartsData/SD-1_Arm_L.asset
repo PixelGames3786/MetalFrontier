@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: SD-1_Arm_L
   m_EditorClassIdentifier: 
   ItemNumber: 308
+  itemType: 0
   price: 0
   itemName: "SD-1 \u5DE6\u8155\u90E8"
   Description: "\u306A\u3057"
   Type: 2
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: UpperArm_L_Mesh

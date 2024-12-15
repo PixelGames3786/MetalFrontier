@@ -13,17 +13,20 @@ MonoBehaviour:
   m_Name: SK-AR4500_Body
   m_EditorClassIdentifier: 
   ItemNumber: 317
+  itemType: 0
   price: 0
   itemName: "SK-AR4500 \u80F4\u4F53\u90E8"
   Description: "\u306A\u3057"
   Type: 2
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: UpperArm_L_Mesh
-      value: {fileID: 7039168336541149424, guid: 805ba81c94a9ea245a6ad0c741607fe9,
+      value: {fileID: -1642463547419761559, guid: 4873aaabb9f2ad142ae529f155e14e8b,
         type: 3}
     - key: LowerArm_L_Mesh
-      value: {fileID: -6553453923336596848, guid: 8bceb94cf149df9409562a1218546b34,
+      value: {fileID: -5832169210970758187, guid: 6e074dc3fc462bd4e9676b03490995da,
         type: 3}
   hpFactor: 750
   moveSpeed: 0
@@ -33,7 +36,7 @@ MonoBehaviour:
   shotAccuracy: 0
   boostAmout: 8
   boostUseRate: 0
-  boostRecoverRate: 40
+  boostRecoverRate: 0.8
   physicalRes: 0
   beamRes: 0
   maxVel: {x: 0, y: 0, z: 0}

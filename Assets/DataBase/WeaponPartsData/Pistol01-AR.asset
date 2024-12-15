@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8569a1312ccecc48b2cd53c32c61dd4, type: 3}
+  m_Name: Pistol01-AR
+  m_EditorClassIdentifier: 
+  ItemNumber: 609
+  itemType: 1
+  price: 120
+  itemName: "\u30D4\u30B9\u30C8\u30EB01-AR"
+  Description: "\u30B3\u30F3\u30D1\u30AF\u30C8\u306A\u8A2D\u8A08\u3067\u8FD1\u8DDD\u96E2\u304B\u3089\u4E2D\u8DDD\u96E2\u307E\u3067\u5B89\u5B9A\u3057\u305F\u5A01\u529B\u3092\u767A\u63EE\u3059\u308B\u3002\u7CBE\u5EA6\u3068\u9023\u5C04\u901F\u5EA6\u3092\u4E0A\u6607\u3055\u305B\u305F\u30E2\u30C7\u30EB\u3002"
+  setType: 1
+  weaponType: 0
+  attackType: 0
+  modelName: P-101-AR
+  maxModuleSlot: 0
+  minModuleSlot: 0
+  bulletSpeed: 150
+  damage: 20
+  shotBlur: 0.04
+  useInterval: 0.15
+  defaultBullet: 320
+  setPosiWithPrefab:
+    _list:
+    - key: 0
+      value: {fileID: 2989813999663587875, guid: 5a67ba13f64207d4995628a74bc0ddee,
+        type: 3}
+    - key: 1
+      value: {fileID: 2989813999663587875, guid: 5a67ba13f64207d4995628a74bc0ddee,
+        type: 3}

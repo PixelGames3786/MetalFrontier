@@ -82,8 +82,10 @@ MonoBehaviour:
   torqueRatio: 0.5
   speed: 15
   firstTime: 1
-  rotateSpeed: 2
+  rotateSpeed: 2.5
   bulletObj: {fileID: 3115469387208373010}
+  particlePrefab: {fileID: 7407547178043413950, guid: a545805027b01294bb97c7b35ac206ac,
+    type: 3}
   bulletCol: {fileID: 5659674510297013574}
   lineRenderer: {fileID: 8868117674169646897}
 --- !u!1 &8792716700524361539

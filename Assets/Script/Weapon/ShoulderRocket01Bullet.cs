@@ -9,6 +9,7 @@ using UnityEngine;
 public class ShoulderRocket01Bullet : MonoBehaviour
 {
     private Transform target;
+    public GameObject bulletObj,particlePrefab;
 
     public int bulletPower;
 
@@ -31,10 +32,14 @@ public class ShoulderRocket01Bullet : MonoBehaviour
     [SerializeField]
     public AttackData attackData;
 
+    public LineRenderer lineRenderer;
+
+    private List<Vector3> linePoints = new List<Vector3>();
+
     // Start is called before the first frame update
     void Start()
     {
-
+        rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -46,6 +51,29 @@ public class ShoulderRocket01Bullet : MonoBehaviour
         {
             isHoming = false;
         }
+
+        if (bulletObj)
+        {
+            linePoints.Add(transform.position);
+
+            if (linePoints.Count > 30)  // 点の最大数を50に制限
+            {
+                linePoints.RemoveAt(0);
+            }
+        }
+        else
+        {
+            linePoints.Add(transform.position);
+            linePoints.RemoveAt(0);
+            linePoints.RemoveAt(1);
+
+            if (linePoints.Count == 1)
+            {
+                Destroy(gameObject);
+            }
+        }
+
+        if (lineRenderer) DrawLine();
     }
 
     void FixedUpdate()
@@ -63,18 +91,22 @@ public class ShoulderRocket01Bullet : MonoBehaviour
         }
 
         //まっすぐ進む
-        GetComponent<Rigidbody>().velocity = transform.forward * bulletSpeed;
+        rb.velocity = transform.forward * bulletSpeed*Time.deltaTime;
+    }
+
+    private void DrawLine()
+    {
+        lineRenderer.positionCount = linePoints.Count;
+        lineRenderer.SetPositions(linePoints.ToArray()); // オブジェクトの位置情報をセット
     }
 
     public void Shot(Transform tag,Vector3 shotPower)
     {
-        rb = GetComponent<Rigidbody>();
-
         target = tag;
 
         GetComponent<Rigidbody>().isKinematic = false;
 
-        GetComponent<BoxCollider>().enabled = true;
+        bulletObj.GetComponent<BoxCollider>().enabled = true;
 
         rb.AddForce(shotPower, ForceMode.Impulse);
 
@@ -93,17 +125,22 @@ public class ShoulderRocket01Bullet : MonoBehaviour
         {
             damageAble.Damage(attackData);
 
+            //パーティクルを作成
+            GameObject particle = Instantiate(particlePrefab);
+
+            particle.transform.position = collision.contacts[0].point;
+
             cts.Cancel();
             cts.Dispose();
 
-            Destroy(transform.gameObject);
+            Destroy(bulletObj);
         }
         else
         {
             cts.Cancel();
             cts.Dispose();
 
-            Destroy(transform.gameObject);
+            Destroy(bulletObj);
         }
     }
 

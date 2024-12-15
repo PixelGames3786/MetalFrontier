@@ -13,14 +13,18 @@ MonoBehaviour:
   m_Name: SNP-E02_Head
   m_EditorClassIdentifier: 
   ItemNumber: 321
+  itemType: 0
   price: 0
   itemName: "SNP-E02 \u982D\u90E8"
   Description: "\u306A\u3057"
   Type: 0
+  maxModuleSlot: 0
+  minModuleSlot: 0
   ObjnameMeshPairs:
     _list:
     - key: Head_Mesh
-      value: {fileID: 0}
+      value: {fileID: 1064172677393172264, guid: db4f39e501992c34798925457b4ece43,
+        type: 3}
   hpFactor: 50
   moveSpeed: 0
   boostSpeed: 0
