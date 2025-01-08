@@ -5,13 +5,174 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using System.Linq;
-using static MissionState;
+using MissionManageState;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using UnityEngine.InputSystem;
-using static ShopControllerState;
 
 public class MissionManager : MonoBehaviour
+{
+    private List<MissionState> states = new List<MissionState>();
+
+    //ミッション中に入手したアイテム　クリアした際に入手する
+    public List<HavingItem> getItems { get; private set; } = new List<HavingItem>();
+
+    private MissionState nowState;
+
+    //ミッションの状態を管理するCondition
+    public MissionCondition condition { get; private set; }
+
+    //全ユニット（プレイヤー・敵含め）
+    public List<UnitBase> allUnit;
+
+    //死亡ハンドラー（全てのユニットの）
+    public List<DeathHandler> deathHandlers;
+
+    public CanvasGroup curtain;
+
+    public MissionResultManager resultManager;
+
+    public InputAction menuAction;
+    public CanvasGroup menuGroup;
+    public RectTransform menuSelectArrow;
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        condition=GetComponent<MissionCondition>();
+
+        //InputActionを登録
+        InputControls control = new InputControls();
+
+        menuAction = control.Mission.Menu;
+        menuAction.Enable();
+
+        //ステートに追加
+        states.Add(new CountDownState(this));
+        states.Add(new InMissionState(this));
+        states.Add(new WaitForReturnState(this));
+        states.Add(new MenuState(this));
+
+        nowState = states[0];
+
+        nowState.OnEnter();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        nowState.OnUpdate();
+    }
+
+    //ミッション成功か失敗かを判定する
+    public void CheckClearOrFail()
+    {
+        //既にミッションが終わっているなら判定しない
+        if (condition.isMissionEnd) return;
+
+        bool isClear = condition.ClearConditionCheck();
+        bool isFail = condition.FailConditionCheck();
+
+        if (isClear)
+        {
+            condition.MissionClear();
+
+            StateTranstion(MissionState.MissionStateEnum.WaitForReturn);
+        }
+
+        if (isFail)
+        {
+            StateTranstion(MissionState.MissionStateEnum.WaitForReturn);
+        }
+    }
+
+    //敵や自キャラを操作できなくする
+    public void MissionStop()
+    {
+        //プレイヤーと敵を全停止
+        foreach (UnitBase unit in allUnit)
+        {
+            unit?.UnitDeactivate();
+        }
+    }
+
+    //ミッションを失敗させる
+    public void MissionFail()
+    {
+        MissionStop();
+        resultManager.ResultSetUp();
+    }
+
+    //クリア時に、一時保存していたアイテムを手に入れたりする処理
+    public void GetReward()
+    {
+        SaveData saveData = SaveDataManager.instance.saveData;
+
+        foreach (ItemData data in condition.missionData.clearGetItems)
+        {
+            getItems.Add(new HavingItem(data.ItemNumber));
+        }
+
+        foreach (var data in getItems) Debug.Log(data.itemData.itemName);
+
+        //報酬入手
+        saveData.ColChange(condition.missionData.clearGetCol);
+        saveData.AddItemRange(getItems.ToArray());
+
+        //ミッション解放
+        foreach (MissionData mission in condition.missionData.clearOpenMisison)
+        {
+            saveData.OpenMission(mission.missionNumber);
+        }
+    }
+
+    //ミッション中に入手したアイテムを一時保存　入手したアイテムはクリア時に実際にプレイヤーに渡される
+    public void GetItem(int itemNum)
+    {
+        getItems.Add(new HavingItem(itemNum));
+    }
+
+    //ミッション中に新たにユニットが作られた際に登録する
+    public void AddUnit(UnitBase newUnit)
+    {
+        allUnit.Add(newUnit);
+    }
+
+    //ミッション中に新たなユニットが作られた際の死亡ハンドラーを登録
+    public void AddDeathHandler(DeathHandler newHandler)
+    {
+        deathHandlers.Add(newHandler);
+        newHandler.OnDeathWithName += condition.AddDefeatedUnit;
+    }
+
+    //黒幕をフェードインしてシーンを変える
+    public void CurtainTransition(string transtionScene)
+    {
+        curtain.gameObject.SetActive(true);
+        curtain.DOFade(1f, 1f).OnComplete(() =>
+        {
+            SceneChangeManager.instance.StartCoroutine("SceneTransition", transtionScene);
+        });
+    }
+
+    //ステートの切り替え
+    public void StateTranstion(MissionState.MissionStateEnum transitState)
+    {
+        nowState.OnExit();
+
+        MissionState newState = states.First(state => state.State == transitState);
+
+        //ヌルチェ
+        if (newState == null) throw new System.Exception("遷移するステートがないらしいよ");
+
+        nowState = newState;
+
+        nowState.OnEnter();
+    }
+}
+
+namespace MissionManageState
 {
     //シーンが読み込まれた際に、シーンのセットアップを行うステート
     public class CountDownState : MissionState
@@ -45,15 +206,16 @@ public class MissionManager : MonoBehaviour
             //Conditionが変更された際にクリア判定をするためのデリゲート
             missionManager.condition.onConditionChange += missionManager.CheckClearOrFail;
 
-            //プレイヤーのセットアップ
-            missionManager.playerInput.LegacySetUp();
-            missionManager.playerInput.OnDeathWithName += missionManager.condition.AddDefeatedLegacy;
-
-            //敵のセットアップ
-            foreach (EnemyControlTest enemy in missionManager.enemys)
+            //敵・プレイヤーのセットアップを行う
+            foreach (UnitBase unit in missionManager.allUnit)
             {
-                enemy.LegacySetUp();
-                enemy.OnDeathWithName += missionManager.condition.AddDefeatedLegacy;
+                unit?.UnitSetUp();
+            }
+
+            //死亡ハンドラーのデリゲート登録
+            foreach (DeathHandler handler in missionManager.deathHandlers)
+            {
+                handler.OnDeathWithName+= missionManager.condition.AddDefeatedUnit;
             }
 
             //セットアップ終了したなら
@@ -62,13 +224,9 @@ public class MissionManager : MonoBehaviour
             {
                 missionManager.curtain.gameObject.SetActive(false);
 
-                missionManager.playerInput.SetWorking(true);
-                missionManager.playerInput.SetOparete(true);
-
-                foreach (EnemyControlTest enemy in missionManager.enemys)
+                foreach (UnitBase unit in missionManager.allUnit)
                 {
-                    enemy.SetWorking(true);
-                    enemy.SetOparete(true);
+                    unit?.UnitActivate();
                 }
 
                 //ステートを切り替える
@@ -114,7 +272,7 @@ public class MissionManager : MonoBehaviour
         {
             Time.timeScale = 0;
 
-            Animator[] animators = FindObjectsOfType<Animator>();
+            Animator[] animators = GameObject.FindObjectsOfType<Animator>();
 
             foreach (var animator in animators)
             {
@@ -181,7 +339,6 @@ public class MissionManager : MonoBehaviour
             upArrowAct.Enable();
             downArrowAct.Enable();
             confirmAct.Enable();
-
         }
 
         public override void OnExit()
@@ -243,7 +400,7 @@ public class MissionManager : MonoBehaviour
                 missionManager.menuGroup.gameObject.SetActive(false);
                 Time.timeScale = 1;
 
-                Animator[] animators = FindObjectsOfType<Animator>();
+                Animator[] animators = GameObject.FindObjectsOfType<Animator>();
 
                 foreach (var animator in animators)
                 {
@@ -261,7 +418,7 @@ public class MissionManager : MonoBehaviour
                 missionManager.menuGroup.gameObject.SetActive(false);
                 Time.timeScale = 1;
 
-                Animator[] animators = FindObjectsOfType<Animator>();
+                Animator[] animators = GameObject.FindObjectsOfType<Animator>();
 
                 foreach (var animator in animators)
                 {
@@ -304,7 +461,7 @@ public class MissionManager : MonoBehaviour
             BackAction.Enable();
 
             //BackToBaseUIをセットアップ
-            PlayerUIController uiController = FindObjectOfType<PlayerUIController>();
+            PlayerUIController uiController = GameObject.FindObjectOfType<PlayerUIController>();
             uiController.StartReturnCountDown();
             waitCountDown += uiController.ReturnCountDownChange;
 
@@ -345,8 +502,6 @@ public class MissionManager : MonoBehaviour
         //帰還ボタンが押された際の処理
         private void BackButtonPress(InputAction.CallbackContext context)
         {
-            print("帰還ボタンが押されましたよ");
-
             //カウントダウンをキャンセル
             _cts.Cancel();
             _cts.Dispose();
@@ -357,217 +512,72 @@ public class MissionManager : MonoBehaviour
             missionManager.resultManager.ResultSetUp();
         }
     }
-
-
-    private List<MissionState> states = new List<MissionState>();
-
-    //ミッション中に入手したアイテム　クリアした際に入手する
-    public List<HavingItem> getItems { get; private set; } = new List<HavingItem>();
-
-    private MissionState nowState;
-
-    //ミッションの状態を管理するCondition
-    public MissionCondition condition { get; private set; }
-
-    //プレイヤー
-    public RobotPlayerInput playerInput;
-
-    public EnemyControlTest[] enemys;
-
-    [SerializeField]
-    private CanvasGroup curtain;
-
-    public MissionResultManager resultManager;
-
-    public InputAction menuAction;
-    public CanvasGroup menuGroup;
-    public RectTransform menuSelectArrow;
-
-
-    // Start is called before the first frame update
-    void Start()
+    //基底ステートの定義
+    public abstract class MissionState : IState
     {
-        condition=GetComponent<MissionCondition>();
-
-        //InputActionを登録
-        InputControls control = new InputControls();
-
-        menuAction = control.Mission.Menu;
-        menuAction.Enable();
-
-        //ステートに追加
-        states.Add(new CountDownState(this));
-        states.Add(new InMissionState(this));
-        states.Add(new WaitForReturnState(this));
-        states.Add(new MenuState(this));
-
-        nowState = states[0];
-
-        nowState.OnEnter();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        nowState.OnUpdate();
-    }
-
-    //ミッション成功か失敗かを判定する
-    public void CheckClearOrFail()
-    {
-        //既にミッションが終わっているなら判定しない
-        if (condition.isMissionEnd) return;
-
-        bool isClear = condition.ClearConditionCheck();
-        bool isFail = condition.FailConditionCheck();
-
-        if (isClear)
+        public enum MissionStateEnum
         {
-            condition.MissionClear();
-
-            StateTranstion(MissionStateEnum.WaitForReturn);
+            CurtainFadeOut, //シーンロード後　黒幕をフェードアウト
+            CountDown, //ミッション開始までのカウントダウン
+            InMission, //ミッション中
+            WaitForReturn, //ミッション終了後　帰還待ち状態
+            Menu,
         }
 
-        if (isFail)
+        public MissionStateEnum State;
+
+        public MissionManager missionManager;
+
+        //呼べる関数をまとめるDictionary
+        protected Dictionary<string, Action> actionDic;
+
+        //引数ありの関数をまとめるよ
+        protected Dictionary<string, Action<object[]>> actionDicWithArg;
+
+        public virtual void CallFunc(string FuncName)
         {
-            StateTranstion(MissionStateEnum.WaitForReturn);
-        }
-    }
+            Action action = actionDic[FuncName];
 
-    //敵や自キャラを操作できなくする
-    public void MissionStop()
-    {
-        //プレイヤーと敵を全停止
-        playerInput?.SetWorking(false);
-        playerInput?.SetOparete(false);
-
-        foreach (EnemyControlTest enemy in enemys)
-        {
-            enemy?.SetWorking(false);
-            enemy?.SetOparete(false);
-        }
-    }
-
-    //ミッションを失敗させる
-    public void MissionFail()
-    {
-        MissionStop();
-
-        resultManager.ResultSetUp();
-    }
-
-    //クリア時に、アイテムを手に入れたりする処理
-    public void GetReward()
-    {
-        SaveData saveData = SaveDataManager.instance.saveData;
-
-        foreach (ItemData data in condition.missionData.clearGetItems)
-        {
-            getItems.Add(new HavingItem(data.ItemNumber));
+            if (action != null)
+            {
+                action.Invoke();
+            }
+            else
+            {
+                throw new System.Exception("呼ぶ関数がないぜ！");
+            }
         }
 
-        foreach (var data in getItems) Debug.Log(data.itemData.itemName);
-
-        saveData.ColChange(condition.missionData.clearGetCol);
-        saveData.AddItemRange(getItems.ToArray());
-    }
-
-    //ミッション中にアイテムを入手する　入手したアイテムはクリア時に実際にプレイヤーに渡される
-    public void GetItem(int itemNum)
-    {
-        getItems.Add(new HavingItem(itemNum));
-    }
-
-
-    public void CurtainTransition(string transtionScene)
-    {
-        curtain.gameObject.SetActive(true);
-        curtain.DOFade(1f, 1f).OnComplete(() =>
+        public virtual void CallFuncArg(string FuncName, object[] args)
         {
-            SceneChangeManager.instance.StartCoroutine("SceneTransition", transtionScene);
-        });
-    }
+            Action<object[]> action = actionDicWithArg[FuncName];
 
-    //ステートの切り替え
-    public void StateTranstion(MissionState.MissionStateEnum transitState)
-    {
-        nowState.OnExit();
+            if (action != null)
+            {
+                action.Invoke(args);
+            }
+            else
+            {
+                throw new System.Exception("呼ぶ関数がないぜ！");
+            }
+        }
 
-        MissionState newState = states.First(state => state.State == transitState);
 
-        //ヌルチェ
-        if (newState == null) throw new System.Exception("遷移するステートがないらしいよ");
+        public virtual void OnEnter()
+        {
 
-        nowState = newState;
+        }
 
-        nowState.OnEnter();
+        public virtual void OnExit()
+        {
+
+        }
+
+        public virtual void OnUpdate()
+        {
+
+        }
     }
 }
 
-//基底ステートの定義
-public abstract class MissionState : IState
-{
-    public enum MissionStateEnum
-    {
-        CurtainFadeOut, //シーンロード後　黒幕をフェードアウト
-        CountDown, //ミッション開始までのカウントダウン
-        InMission, //ミッション中
-        WaitForReturn, //ミッション終了後　帰還待ち状態
-        Menu,
-    }
-
-    public MissionStateEnum State;
-
-    public MissionManager missionManager;
-
-    //呼べる関数をまとめるDictionary
-    protected Dictionary<string, Action> actionDic;
-
-    //引数ありの関数をまとめるよ
-    protected Dictionary<string, Action<object[]>> actionDicWithArg;
-
-    public virtual void CallFunc(string FuncName)
-    {
-        Action action = actionDic[FuncName];
-
-        if (action != null)
-        {
-            action.Invoke();
-        }
-        else
-        {
-            throw new System.Exception("呼ぶ関数がないぜ！");
-        }
-    }
-
-    public virtual void CallFuncArg(string FuncName, object[] args)
-    {
-        Action<object[]> action = actionDicWithArg[FuncName];
-
-        if (action != null)
-        {
-            action.Invoke(args);
-        }
-        else
-        {
-            throw new System.Exception("呼ぶ関数がないぜ！");
-        }
-    }
-
-
-    public virtual void OnEnter()
-    {
-
-    }
-
-    public virtual void OnExit()
-    {
-
-    }
-
-    public virtual void OnUpdate()
-    {
-
-    }
-}
 

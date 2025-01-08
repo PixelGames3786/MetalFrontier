@@ -49,7 +49,7 @@ public class ConfirmCheckUI : MonoBehaviour
 
     public void InitializeMissionUI(MissionData mission)
     {
-        checkText.text = $"{mission.name}に出撃しますか？";
+        checkText.text = $"{mission.missionName}に出撃しますか？";
     }
 
     public void ChangeForcus(int changeNum)

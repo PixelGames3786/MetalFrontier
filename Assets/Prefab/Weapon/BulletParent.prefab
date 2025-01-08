@@ -9,6 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6405358650224868243}
+  - component: {fileID: 9084004158972802297}
+  - component: {fileID: 2415340650072382134}
   m_Layer: 0
   m_Name: BulletParent
   m_TagString: Untagged
@@ -32,6 +34,54 @@ Transform:
   - {fileID: 125477254939604338}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!54 &9084004158972802297
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4779404370962800624}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &2415340650072382134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4779404370962800624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea3817bcb05cb634aba79f4ed6bdc98f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lifeTime: 5
+  attackData:
+    type: 0
+    damage: 10
+  particlePrefab: {fileID: 7407547178043413950, guid: e92b639a73f7c8b4fabf4892ca1470b0,
+    type: 3}
+  rb: {fileID: 9084004158972802297}
+  bulletCollider: {fileID: 5815624016396703089}
+  destroyObj: {fileID: 4779404370962800624}
 --- !u!1001 &7071636072826172166
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -100,14 +150,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4264513526071284355, guid: c87100af5a6f3cc429cd4f53f3d8a951, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2474337187617950420, guid: c87100af5a6f3cc429cd4f53f3d8a951,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 7688684656784328333}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c87100af5a6f3cc429cd4f53f3d8a951, type: 3}
 --- !u!4 &125477254939604338 stripped
 Transform:
@@ -115,27 +162,9 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 7071636072826172166}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &4644868293778586066 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2474337187617950420, guid: c87100af5a6f3cc429cd4f53f3d8a951,
+--- !u!65 &5815624016396703089 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 3645172075094222455, guid: c87100af5a6f3cc429cd4f53f3d8a951,
     type: 3}
   m_PrefabInstance: {fileID: 7071636072826172166}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &7688684656784328333
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4644868293778586066}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea3817bcb05cb634aba79f4ed6bdc98f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lifeTime: 5
-  attackData:
-    type: 0
-    damage: 10
-  particlePrefab: {fileID: 7407547178043413950, guid: e92b639a73f7c8b4fabf4892ca1470b0,
-    type: 3}

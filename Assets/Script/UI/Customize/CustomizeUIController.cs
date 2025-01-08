@@ -6,12 +6,230 @@ using System.Reflection;
 using System;
 using DG.Tweening;
 using UnityEngine.InputSystem;
-using static ShopControllerState;
 using TMPro;
+using CustomizeUI;
 
 public class CustomizeUIController : MonoBehaviour
 {
     //ステートで状態を管理する
+    public CanvasGroup curtainCanvas;
+
+    public CustomRobotController robotControl;
+
+    private List<CustomizeControlState> States = new List<CustomizeControlState>();
+
+    public CustomizeControlState nowState,beforeState;
+
+    public RectTransform genreSelectArrowRect,typeSelectArrowRect;
+    public RectTransform selectMenuParent, bodyMenuParent,weaponMenuParent;
+
+    public GameObject legacyCustomPrefab;
+
+    public GameObject ButtonsParent;
+    public PartsScrollView partsScroll;
+
+    public LegacyStatusUI statusUI;
+
+    public MainMenuUIController mainMenuControl;
+
+    public DockImageTransition transitionManager;
+
+    [NonSerialized]
+    public InputAction upArrowAct, downArrowAct, leftArrowAct, rightArrowAct, confirmAct, cancelAct;
+
+    [NonSerialized]
+    public InputAction openStatusAct;
+
+    private void Awake()
+    {
+        //Actionのセットアップ
+        InputControls testControl = new InputControls();
+
+        upArrowAct = testControl.UI.UpArrow;
+        downArrowAct = testControl.UI.DownArrow;
+        leftArrowAct = testControl.UI.LeftArrow;
+        rightArrowAct = testControl.UI.RightArrow;
+        confirmAct = testControl.UI.Confirm;
+        cancelAct = testControl.UI.Cancel;
+        openStatusAct = testControl.UI.OpenStatus;
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        //openStatusAct.performed += StatusOpenClose;
+
+        States.Add(new SetUpState(this));
+        States.Add(new WaitState(this));
+        States.Add(new SelectMenuState(this));
+        States.Add(new SelectBodyMenuState(this));
+        States.Add(new SelectWeaponMenuState(this));
+        States.Add(new OpenedScrollViewState(this));
+
+        nowState = States[0];
+
+        nowState.OnEnter();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        nowState.OnUpdate();
+    }
+
+    //ステートの関数を呼び出す（引数なし）
+    public void CallStateFunc(string funcName)
+    {
+        nowState.CallFunc(funcName);
+    }
+
+    //ステートの関数を呼び出す（引数あり）
+    public void CallStateFuncArg(string funcName, object[] args)
+    {
+        nowState.CallFuncArg(funcName, args);
+    }
+
+    //レガシーパーツの変更
+    public void LegacyPartsChange(BodyPartsData.PartsType type, int partsNum, HavingItem having)
+    {
+        SaveDataManager.instance.saveData.LegacyPartsChange(type, having);
+
+        robotControl.PartsSetReflect();
+
+        //ステータスに反映
+        StatusUIDataReflesh();
+    }
+
+    //武器パーツの変更
+    public void WeaponPartsChange(LegacySettingData.WeaponSetPosi posi, int partsNum, HavingItem having)
+    {
+        SaveDataManager.instance.saveData.WeaponPartsChange(posi, having);
+
+        robotControl.PartsSetReflect();
+    }
+
+    //ステートの切り替え
+    public void StateTranstion(CustomizeControlState.CustomizeUIState transitState)
+    {
+        nowState.OnExit();
+
+        CustomizeControlState newState = States.First(state => state.state == transitState);
+
+        //ヌルチェ
+        if (newState == null) throw new System.Exception("遷移するステートがないらしいよ");
+
+        beforeState = nowState;
+        nowState = newState;
+
+        nowState.OnEnter();
+    }
+
+    //ステータス表示
+    public void StatusOpenClose(InputAction.CallbackContext context)
+    {
+        statusUI.ChangeNextState();
+        StatusUIDataReflesh();
+    }
+
+    //ステータスUIデータ更新
+    public void StatusUIDataReflesh()
+    {
+        statusUI.NowStatusInitialize();
+        statusUI.UIInitialize();
+    }
+
+    private void OnDisable()
+    {
+        upArrowAct.Disable();
+        downArrowAct.Disable();
+        leftArrowAct.Disable();
+        rightArrowAct.Disable();
+        confirmAct.Disable();
+        cancelAct.Disable();
+        openStatusAct.Disable();
+    }
+
+    private void OnEnable()
+    {
+        upArrowAct.Enable();
+        downArrowAct.Enable();
+        leftArrowAct.Enable();
+        rightArrowAct.Enable();
+        confirmAct.Enable();
+        cancelAct.Enable();
+        openStatusAct.Enable();
+    }
+}
+
+namespace CustomizeUI
+{
+    //基底ステートの定義
+    public abstract class CustomizeControlState : IState
+    {
+        public enum CustomizeUIState
+        {
+            SetUp,
+            Wait,
+            SelectMenu,     //ボディパーツか武器パーツか選択するメニュー
+            SelectBodyMenu, //頭や体、どのパーツを変更するか選択するメニュー
+            SelectWeaponMenu, //左腕や右腕、どのパーツを変更するか選択するメニュー
+            OpenedScrollView,
+        }
+
+        public CustomizeUIState state;
+
+        protected CustomizeUIController uiControl;
+
+        //呼べる関数をまとめるDictionary
+        protected Dictionary<string, Action> actionDic;
+
+        //引数ありの関数をまとめるよ
+        protected Dictionary<string, Action<object[]>> actionDicWithArg;
+
+        public virtual void CallFunc(string FuncName)
+        {
+            Action action = actionDic[FuncName];
+
+            if (action != null)
+            {
+                action.Invoke();
+            }
+            else
+            {
+                throw new System.Exception("呼ぶ関数がないぜ！");
+            }
+        }
+
+        public virtual void CallFuncArg(string FuncName, object[] args)
+        {
+            Action<object[]> action = actionDicWithArg[FuncName];
+
+            if (action != null)
+            {
+                action.Invoke(args);
+            }
+            else
+            {
+                throw new System.Exception("呼ぶ関数がないぜ！");
+            }
+        }
+
+
+        public virtual void OnEnter()
+        {
+
+        }
+
+        public virtual void OnExit()
+        {
+
+        }
+
+        public virtual void OnUpdate()
+        {
+
+        }
+    }
 
     //シーンが読み込まれた際に、シーンのセットアップを行うステート
     class SetUpState : CustomizeControlState
@@ -42,7 +260,7 @@ public class CustomizeUIController : MonoBehaviour
         private void SetUp()
         {
             //自レガシーオブジェクト生成
-            GameObject legacyObj = Instantiate(uiControl.legacyCustomPrefab);
+            GameObject legacyObj = UnityEngine.Object.Instantiate(uiControl.legacyCustomPrefab);
             uiControl.robotControl = legacyObj.GetComponent<CustomRobotController>();
 
             uiControl.robotControl.PartsSetReflect();
@@ -135,7 +353,7 @@ public class CustomizeUIController : MonoBehaviour
             uiControl.upArrowAct.performed -= UpArrowAction;
             uiControl.downArrowAct.performed -= DownArrowAction;
             uiControl.confirmAct.performed -= ConfirmAction;
-            uiControl.cancelAct.performed-= CanselAction;
+            uiControl.cancelAct.performed -= CanselAction;
         }
 
         private void InputActionRegister()
@@ -181,7 +399,7 @@ public class CustomizeUIController : MonoBehaviour
             {
                 case MenuState.Body:
 
-                    uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomGenre,DockImageTransition.MenuType.CustomPartsType);
+                    uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomPartsType);
                     uiControl.StateTranstion(CustomizeUIState.SelectBodyMenu);
 
                     break;
@@ -197,7 +415,7 @@ public class CustomizeUIController : MonoBehaviour
 
         public void CanselAction(InputAction.CallbackContext context)
         {
-            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.Terminal,DockImageTransition.MenuType.CustomGenre);
+            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.Terminal, DockImageTransition.MenuType.CustomGenre);
             uiControl.StateTranstion(CustomizeUIState.Wait);
             uiControl.mainMenuControl.StateTranstion(MainMenuState.MainMenuStateEnum.SelectMenu);
         }
@@ -461,12 +679,12 @@ public class CustomizeUIController : MonoBehaviour
         private void ConfirmAction(InputAction.CallbackContext context) //確定
         {
             //現在選択している種類の商品のスクロールビューを表示する
-            WeaponPartsData.SetType type=WeaponPartsData.SetType.Arm;
+            WeaponPartsData.SetType type = WeaponPartsData.SetType.Arm;
             LegacySettingData.WeaponSetPosi selectPosi = (LegacySettingData.WeaponSetPosi)nowSelectNum;
 
             if (nowSelectNum > 1) type = WeaponPartsData.SetType.Shoulder;
 
-            OpenWeaponSelectScroll(type,selectPosi);
+            OpenWeaponSelectScroll(type, selectPosi);
         }
 
         public void CanselAction(InputAction.CallbackContext context)
@@ -475,7 +693,7 @@ public class CustomizeUIController : MonoBehaviour
             uiControl.StateTranstion(CustomizeUIState.SelectMenu);
         }
 
-        private void OpenWeaponSelectScroll(WeaponPartsData.SetType type,LegacySettingData.WeaponSetPosi setPosi)
+        private void OpenWeaponSelectScroll(WeaponPartsData.SetType type, LegacySettingData.WeaponSetPosi setPosi)
         {
             //所持パーツから指定した種類のパーツを抜き出しそれでスクロールビューを構成する
             SaveData saveData = SaveDataManager.instance.saveData;
@@ -569,219 +787,6 @@ public class CustomizeUIController : MonoBehaviour
             uiControl.StateTranstion(uiControl.beforeState.state);
         }
     }
-
-    public CanvasGroup curtainCanvas;
-
-    public CustomRobotController robotControl;
-
-    private List<CustomizeControlState> States = new List<CustomizeControlState>();
-
-    private CustomizeControlState nowState,beforeState;
-
-    public RectTransform genreSelectArrowRect,typeSelectArrowRect;
-    public RectTransform selectMenuParent, bodyMenuParent,weaponMenuParent;
-
-    public GameObject legacyCustomPrefab;
-
-    public GameObject ButtonsParent;
-    public PartsScrollView partsScroll;
-
-    public LegacyStatusUI statusUI;
-
-    public MainMenuUIController mainMenuControl;
-
-    public DockImageTransition transitionManager;
-
-    [NonSerialized]
-    public InputAction upArrowAct, downArrowAct, leftArrowAct, rightArrowAct, confirmAct, cancelAct;
-
-    private InputAction openStatusAct;
-
-    private void Awake()
-    {
-        //Actionのセットアップ
-        InputControls testControl = new InputControls();
-
-        upArrowAct = testControl.UI.UpArrow;
-        downArrowAct = testControl.UI.DownArrow;
-        leftArrowAct = testControl.UI.LeftArrow;
-        rightArrowAct = testControl.UI.RightArrow;
-        confirmAct = testControl.UI.Confirm;
-        cancelAct = testControl.UI.Cancel;
-        openStatusAct = testControl.UI.OpenStatus;
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        //openStatusAct.performed += StatusOpenClose;
-
-        States.Add(new SetUpState(this));
-        States.Add(new WaitState(this));
-        States.Add(new SelectMenuState(this));
-        States.Add(new SelectBodyMenuState(this));
-        States.Add(new SelectWeaponMenuState(this));
-        States.Add(new OpenedScrollViewState(this));
-
-        nowState = States[0];
-
-        nowState.OnEnter();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        nowState.OnUpdate();
-    }
-
-    //ステートの関数を呼び出す（引数なし）
-    public void CallStateFunc(string funcName)
-    {
-        nowState.CallFunc(funcName);
-    }
-
-    //ステートの関数を呼び出す（引数あり）
-    public void CallStateFuncArg(string funcName, object[] args)
-    {
-        nowState.CallFuncArg(funcName, args);
-    }
-
-    //レガシーパーツの変更
-    public void LegacyPartsChange(BodyPartsData.PartsType type, int partsNum, HavingItem having)
-    {
-        SaveDataManager.instance.saveData.LegacyPartsChange(type, having);
-
-        robotControl.PartsSetReflect();
-
-        //ステータスに反映
-        StatusUIDataReflesh();
-    }
-
-    //武器パーツの変更
-    public void WeaponPartsChange(LegacySettingData.WeaponSetPosi posi, int partsNum, HavingItem having)
-    {
-        SaveDataManager.instance.saveData.WeaponPartsChange(posi, having);
-
-        robotControl.PartsSetReflect();
-    }
-
-    //ステートの切り替え
-    public void StateTranstion(CustomizeControlState.CustomizeUIState transitState)
-    {
-        nowState.OnExit();
-
-        CustomizeControlState newState = States.First(state => state.state == transitState);
-
-        //ヌルチェ
-        if (newState == null) throw new System.Exception("遷移するステートがないらしいよ");
-
-        beforeState = nowState;
-        nowState = newState;
-
-        nowState.OnEnter();
-    }
-
-    //ステータス表示
-    public void StatusOpenClose(InputAction.CallbackContext context)
-    {
-        statusUI.ChangeNextState();
-        StatusUIDataReflesh();
-    }
-
-    //ステータスUIデータ更新
-    public void StatusUIDataReflesh()
-    {
-        statusUI.NowStatusInitialize();
-        statusUI.UIInitialize();
-    }
-
-    private void OnDisable()
-    {
-        upArrowAct.Disable();
-        downArrowAct.Disable();
-        leftArrowAct.Disable();
-        rightArrowAct.Disable();
-        confirmAct.Disable();
-        cancelAct.Disable();
-        openStatusAct.Disable();
-    }
-
-    private void OnEnable()
-    {
-        upArrowAct.Enable();
-        downArrowAct.Enable();
-        leftArrowAct.Enable();
-        rightArrowAct.Enable();
-        confirmAct.Enable();
-        cancelAct.Enable();
-        openStatusAct.Enable();
-    }
 }
 
-//基底ステートの定義
-public abstract class CustomizeControlState : IState
-{
-    public enum CustomizeUIState
-    {
-        SetUp,
-        Wait,
-        SelectMenu,     //ボディパーツか武器パーツか選択するメニュー
-        SelectBodyMenu, //頭や体、どのパーツを変更するか選択するメニュー
-        SelectWeaponMenu, //左腕や右腕、どのパーツを変更するか選択するメニュー
-        OpenedScrollView,
-    }
 
-    public CustomizeUIState state;
-
-    protected CustomizeUIController uiControl;
-
-    //呼べる関数をまとめるDictionary
-    protected Dictionary<string, Action> actionDic;
-
-    //引数ありの関数をまとめるよ
-    protected Dictionary<string, Action<object[]>> actionDicWithArg;
-
-    public virtual void CallFunc(string FuncName)
-    {
-        Action action = actionDic[FuncName];
-
-        if (action != null)
-        {
-            action.Invoke();
-        }
-        else
-        {
-            throw new System.Exception("呼ぶ関数がないぜ！");
-        }
-    }
-
-    public virtual void CallFuncArg(string FuncName, object[] args)
-    {
-        Action<object[]> action = actionDicWithArg[FuncName];
-
-        if (action != null)
-        {
-            action.Invoke(args);
-        }
-        else
-        {
-            throw new System.Exception("呼ぶ関数がないぜ！");
-        }
-    }
-
-
-    public virtual void OnEnter()
-    {
-
-    }
-
-    public virtual void OnExit()
-    {
-
-    }
-
-    public virtual void OnUpdate()
-    {
-
-    }
-}

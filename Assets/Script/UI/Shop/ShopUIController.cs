@@ -7,7 +7,6 @@ using UnityEngine.InputSystem;
 using DG.Tweening;
 using TMPro;
 using Cysharp.Threading.Tasks;
-using static CustomizeControlState;
 
 public class ShopUIController : MonoBehaviour
 {

@@ -6,8 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using DG.Tweening;
 using TMPro;
-using Cysharp.Threading.Tasks;
-using static MissionManager;
+using CustomizeUI;
 using MenuType = DockImageTransition.MenuType;
 
 public class MainMenuUIController : MonoBehaviour

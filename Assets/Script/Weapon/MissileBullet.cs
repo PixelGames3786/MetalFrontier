@@ -5,10 +5,14 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 using System;
 using UnityEngine.UIElements;
+using UnityEngine.InputSystem.XR;
 
 
-public class MissileBullet : MonoBehaviour
+public class MissileBullet : MonoBehaviour,IDamageable,ITargetable
 {
+    public bool CanDamage = false;
+    public bool CanTarget = false;
+
     [SerializeField]
     private float lifeTime;
 
@@ -23,6 +27,7 @@ public class MissileBullet : MonoBehaviour
     public float torqueRatio;
     public float speed,firstTime,rotateSpeed;
 
+    public float HP;
     private float elapsedTime=0f;
 
     private bool isHoming=false;
@@ -61,10 +66,14 @@ public class MissileBullet : MonoBehaviour
         else
         {
             linePoints.Add(transform.position);
-            linePoints.RemoveAt(0);
-            linePoints.RemoveAt(1);
 
-            if (linePoints.Count==1)
+            if (linePoints.Count >= 3)
+            {
+                linePoints.RemoveAt(0);
+                linePoints.RemoveAt(1);
+            }
+
+            if (linePoints.Count<=1)
             {
                 Destroy(gameObject);
             }
@@ -110,9 +119,25 @@ public class MissileBullet : MonoBehaviour
 
     public void OnCollisionEnter(Collision collision)
     {
-        IDamageable damageAble = collision.transform.GetComponent<IDamageable>();
+        Transform colTrans = collision.collider.transform;
+        IDamageable damageAble = colTrans.GetComponent<IDamageable>();
 
-        if (damageAble != null)
+        print(colTrans.name);
+
+        if (damageAble == null)
+        {
+            cts.Cancel();
+            cts.Dispose();
+
+            Destroy(bulletObj);
+
+            return;
+        }
+
+        print(damageAble.CanHit());
+
+
+        if (damageAble.CanHit())
         {
             damageAble.Damage(attackData);
 
@@ -121,13 +146,6 @@ public class MissileBullet : MonoBehaviour
 
             particle.transform.position = collision.contacts[0].point;
 
-            cts.Cancel();
-            cts.Dispose();
-
-            Destroy(bulletObj);
-        }
-        else
-        {
             cts.Cancel();
             cts.Dispose();
 
@@ -157,5 +175,70 @@ public class MissileBullet : MonoBehaviour
             // キャンセルされた場合の処理
             Debug.Log("オブジェクト削除がキャンセルされました。");
         }
+    }
+
+    public void Damage(AttackData attack)
+    {
+        //攻撃タイプと耐性を考慮してダメージを決定
+        float damage = attack.damage;
+
+        HP -= damage;
+
+        //死亡処理
+        if (HP <= 0)
+        {
+            CanTarget = false;
+            CanDamage = false;
+
+            //パーティクルを作成
+            GameObject particle = Instantiate(particlePrefab);
+
+            particle.transform.position = transform.position;
+
+            cts.Cancel();
+            cts.Dispose();
+
+            Destroy(bulletObj);
+        }
+    }
+
+    bool IDamageable.CanHit()
+    {
+        return CanDamage;
+    }
+
+    void IDamageable.Damage(AttackData attack)
+    {
+        //攻撃タイプと耐性を考慮してダメージを決定
+        float damage = attack.damage;
+
+        HP-=damage;
+
+        //死亡処理
+        if (HP <= 0)
+        {
+            CanTarget = false;
+            CanDamage = false;
+
+            //パーティクルを作成
+            GameObject particle = Instantiate(particlePrefab);
+
+            particle.transform.position = transform.position;
+
+            cts.Cancel();
+            cts.Dispose();
+
+            Destroy(bulletObj);
+        }
+    }
+
+    bool ITargetable.CanTarget()
+    {
+        return CanTarget;
+    }
+
+    bool ITargetable.IsVisible()
+    {
+        return bulletCol.GetComponent<MeshRenderer>().isVisible;
     }
 }

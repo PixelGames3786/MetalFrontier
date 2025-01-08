@@ -70,6 +70,7 @@ public class SaveData
         settingData.RefleshPartsNumber();
 
         missionNumList.Add(1);
+        missionNumList.Add(2);
 
         //TODO デバッグ用に最初にぱーつをいくつか手に入れる
         AddItemRange(new List<int> { 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 601,607, 602,606 });
@@ -205,5 +206,11 @@ public class SaveData
     public void ColChange(int changeVal)
     {
         haveCol += changeVal;
+    }
+
+    //ミッションを開放する
+    public void OpenMission(int missionNum)
+    {
+        missionNumList.Add(missionNum);
     }
 }

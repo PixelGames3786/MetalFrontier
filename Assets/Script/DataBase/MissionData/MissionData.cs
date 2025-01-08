@@ -23,5 +23,9 @@ public class MissionData : ScriptableObject
     //クリア時に入手できる金額
     public int clearGetCol;
 
+    //クリア時に入手するアイテム
     public List<ItemData> clearGetItems=new List<ItemData>();
+
+    //クリア時に解放されるミッションのリスト
+    public List<MissionData> clearOpenMisison = new List<MissionData>();
 }

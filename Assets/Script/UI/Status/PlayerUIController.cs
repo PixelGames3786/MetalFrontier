@@ -8,7 +8,7 @@ public class PlayerUIController : MonoBehaviour
 {
     //UI類
     public BarUI hpBar, boostBar,quorraBar;
-    public RockOnUI rockOnUI;
+    public LockOnUI lockOnUI;
     public WeaponUseInfoUI weaponInfoUI;
     public OutOfAreaUI outOfAreaUI;
     public BackToBaseUI backToBaseUI;
@@ -49,9 +49,9 @@ public class PlayerUIController : MonoBehaviour
         outOfAreaUI.CountUpChange(value);
     }
 
-    public void SetRockOnUI(List<Transform> target)
+    public void SetLockOnUI(Transform mainTarget,List<Transform> subTargets)
     {
-        rockOnUI.RockOnChange(target);
+        lockOnUI.LockOnChange(mainTarget,subTargets);
     }
 
     public void HPBarChange(float nowHp)
@@ -123,6 +123,11 @@ public class PlayerUIController : MonoBehaviour
         hackSlashUI.CloseWindow();
     }
 
+    public void LockOnUpdate()
+    {
+        lockOnUI.RockOnUIPositionUpdate();
+    }
+
     //UIセットアップ
     public void UIInitlaize(RobotStatusController statusControl)
     {
@@ -131,7 +136,6 @@ public class PlayerUIController : MonoBehaviour
         quorraBar.ValueSetUp(statusControl.nowStatus.quorraAmount, statusControl.nowStatus.quorraAmount-statusControl.usedQuorra);
 
         weaponInfoUI.SetUp(statusControl.GetComponent<RobotSetUpController>());
-
 
         //イベントのサブスクライブなどを行う
         statusControl.onHPChanged += HPBarChange;

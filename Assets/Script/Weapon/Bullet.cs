@@ -18,19 +18,35 @@ public class Bullet : MonoBehaviour
     [SerializeField]
     private GameObject particlePrefab;
 
+    public Rigidbody rb;
+
+    public Collider bulletCollider;
+
+    public GameObject destroyObj;
+
     // Start is called before the first frame update
     void Start()
     {
-        DestroyObjectAfterDelay(lifeTime);
+        
     }
 
     public void OnCollisionEnter(Collision collision)
     {
-        IDamageable damageAble = collision.transform.GetComponent<IDamageable>();
+        Transform colTrans = collision.collider.transform;
+        IDamageable damageAble = colTrans.GetComponent<IDamageable>();
 
-        if (damageAble!=null)
+        if (damageAble == null)
         {
-            //damageAble.Damage(bulletPower);
+            cts.Cancel();
+            cts.Dispose();
+
+            Destroy(destroyObj);
+
+            return;
+        }
+
+        if (damageAble.CanHit())
+        {
             damageAble.Damage(attackData);
 
             //パーティクルを作成
@@ -41,15 +57,15 @@ public class Bullet : MonoBehaviour
             cts.Cancel();
             cts.Dispose();
 
-            Destroy(transform.parent.gameObject);
+            Destroy(destroyObj);
         }
-        else
-        {
-            cts.Cancel();
-            cts.Dispose();
+    }
 
-            Destroy(transform.parent.gameObject);
-        }
+    public void Shot(Vector3 shotPower)
+    {
+        rb.AddForce(shotPower, ForceMode.Impulse);
+
+        DestroyObjectAfterDelay(lifeTime);
     }
 
     // オブジェクトの削除を待機する関数
@@ -64,9 +80,9 @@ public class Bullet : MonoBehaviour
             await UniTask.Delay(TimeSpan.FromSeconds(delayInSeconds), cancellationToken: cts.Token);
 
             // オブジェクトがまだ存在する場合のみデストロイ
-            if (transform.parent.gameObject != null)
+            if (destroyObj != null)
             {
-                Destroy(transform.parent.gameObject);
+                Destroy(destroyObj);
             }
         }
         catch (OperationCanceledException)

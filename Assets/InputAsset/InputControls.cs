@@ -161,6 +161,24 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""TargetChange"",
+                    ""type"": ""Value"",
+                    ""id"": ""8ad79caa-17c1-4430-81b2-6bfa5d4030cd"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Fall"",
+                    ""type"": ""Button"",
+                    ""id"": ""c234cf6d-9292-4af2-af3a-05b189a8cb33"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -370,6 +388,28 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Awake"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5f358c73-e528-4abf-afd5-46a54873269a"",
+                    ""path"": ""<Mouse>/scroll"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""TargetChange"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8f9df17f-b1aa-433e-9c9e-97cbc81e2a71"",
+                    ""path"": ""<Keyboard>/alt"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Fall"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -597,6 +637,8 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         m_Player_Rise = m_Player.FindAction("Rise", throwIfNotFound: true);
         m_Player_Look = m_Player.FindAction("Look", throwIfNotFound: true);
         m_Player_Awake = m_Player.FindAction("Awake", throwIfNotFound: true);
+        m_Player_TargetChange = m_Player.FindAction("TargetChange", throwIfNotFound: true);
+        m_Player_Fall = m_Player.FindAction("Fall", throwIfNotFound: true);
         // Mission
         m_Mission = asset.FindActionMap("Mission", throwIfNotFound: true);
         m_Mission_BackToBase = m_Mission.FindAction("BackToBase", throwIfNotFound: true);
@@ -686,6 +728,8 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Rise;
     private readonly InputAction m_Player_Look;
     private readonly InputAction m_Player_Awake;
+    private readonly InputAction m_Player_TargetChange;
+    private readonly InputAction m_Player_Fall;
     public struct PlayerActions
     {
         private @InputControls m_Wrapper;
@@ -705,6 +749,8 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         public InputAction @Rise => m_Wrapper.m_Player_Rise;
         public InputAction @Look => m_Wrapper.m_Player_Look;
         public InputAction @Awake => m_Wrapper.m_Player_Awake;
+        public InputAction @TargetChange => m_Wrapper.m_Player_TargetChange;
+        public InputAction @Fall => m_Wrapper.m_Player_Fall;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -759,6 +805,12 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Awake.started += instance.OnAwake;
             @Awake.performed += instance.OnAwake;
             @Awake.canceled += instance.OnAwake;
+            @TargetChange.started += instance.OnTargetChange;
+            @TargetChange.performed += instance.OnTargetChange;
+            @TargetChange.canceled += instance.OnTargetChange;
+            @Fall.started += instance.OnFall;
+            @Fall.performed += instance.OnFall;
+            @Fall.canceled += instance.OnFall;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -808,6 +860,12 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
             @Awake.started -= instance.OnAwake;
             @Awake.performed -= instance.OnAwake;
             @Awake.canceled -= instance.OnAwake;
+            @TargetChange.started -= instance.OnTargetChange;
+            @TargetChange.performed -= instance.OnTargetChange;
+            @TargetChange.canceled -= instance.OnTargetChange;
+            @Fall.started -= instance.OnFall;
+            @Fall.performed -= instance.OnFall;
+            @Fall.canceled -= instance.OnFall;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -999,6 +1057,8 @@ public partial class @InputControls: IInputActionCollection2, IDisposable
         void OnRise(InputAction.CallbackContext context);
         void OnLook(InputAction.CallbackContext context);
         void OnAwake(InputAction.CallbackContext context);
+        void OnTargetChange(InputAction.CallbackContext context);
+        void OnFall(InputAction.CallbackContext context);
     }
     public interface IMissionActions
     {

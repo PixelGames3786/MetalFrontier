@@ -42,11 +42,13 @@ public class RobotController : MonoBehaviour
     private bool lookTargetSetting;
 
     [SerializeField]
-    private bool isBoosting,isRising,isInAir;//ブースト中　上昇中　空中にいるか
+    private bool isBoosting,isRising;//ブースト中　上昇中　空中にいるか
+    public bool isInAir { get; private set; }
+    public bool isFalling { get; private set; }
 
     [SerializeField]
-    private bool canJump = true,camReseting; //カメラリセット中か　操作可能状態か
-    public bool canBoost = true,canOperate; //ブースト可能か
+    private bool canJump = true,camReseting; //カメラリセット中か　
+    public bool canBoost = true,canOperate; //ブースト可能か 操作可能状態か
 
     private bool isAwakening; //覚醒中か
     public event Action onAwakeStart,onAwakeEnd;
@@ -81,13 +83,13 @@ public class RobotController : MonoBehaviour
         //向いている方向に基づいて移動ベクトルを計算
         moveDirection = ((transform.forward * moveInput.y) + (transform.right * moveInput.x)).normalized;
 
+        /*
         //ターゲッティング中かどうか
         if (target && lookTargetSetting)
         {
             //ターゲットの方を向く
             CustomLookAtYAxis(target);
-            //transform.LookAt(Target.position);
-        }
+        }*/
 
         //覚醒中ならば徐々に覚醒量を減らしてく
         if (isAwakening)
@@ -134,7 +136,6 @@ public class RobotController : MonoBehaviour
             velocity.x = Mathf.Clamp(rb.velocity.x, status.maxVel.x * -1, status.maxVel.x);
             velocity.y = Mathf.Clamp(rb.velocity.y, status.maxVel.y * -1, status.maxVel.y);
             velocity.z = Mathf.Clamp(rb.velocity.z, status.maxVel.z * -1, status.maxVel.z);
-
         }
 
         //上昇中ならば
@@ -159,7 +160,7 @@ public class RobotController : MonoBehaviour
         }
 
         //何も入力がない時は抵抗を増やしてゆっくり止める
-        if (moveDirection == Vector3.zero && !isInAir)
+        if (moveDirection == Vector3.zero && !isFalling)
         {
             rb.drag = dragValue;  //ドラッグを適用して減速
 
@@ -209,12 +210,17 @@ public class RobotController : MonoBehaviour
         armatureAnimator.SetFloat("Move_v", moveInput.y);
     }
 
+    public void AddForce(Vector3 force,ForceMode mode)
+    {
+        rb.AddForce(force,mode);
+    }
+
     //死亡時処理
     public void Die()
     {
         onDied?.Invoke();
 
-        armatureAnimator.SetBool("IsDied",true);
+        armatureAnimator.SetTrigger("DeathTrigger");
 
         GetComponent<CapsuleCollider>().radius = 1.8f;
 
@@ -315,7 +321,7 @@ public class RobotController : MonoBehaviour
     {
         if (!canBoost) return;
 
-        print("ブースと開始");
+        //print("ブースと開始");
 
         isBoosting = true;
 
@@ -327,7 +333,7 @@ public class RobotController : MonoBehaviour
     //ブースト終了
     public void EndBoost()
     {
-        print("ブースと終了");
+        //print("ブースと終了");
 
         isBoosting = false;
 
@@ -340,6 +346,7 @@ public class RobotController : MonoBehaviour
         if (!isInAir)
         {
             rb.AddForce(new Vector3(0, status.jumpForce, 0), ForceMode.Impulse);
+            rb.useGravity = false;
 
             canJump = false;
             isInAir = true;
@@ -348,17 +355,27 @@ public class RobotController : MonoBehaviour
         }
     }
 
+    //空中にいるときに落下する
+    public void OnFall()
+    {
+        isFalling= true;
+        rb.useGravity = true;
+    }
+
     //ジャンプボタン長押し（上昇）がされたとき
     public void StartRise()
     {
         if (!canBoost) return;
 
         isRising = true;
+        isFalling= false;
+        rb.useGravity = false;
     }
 
     public void EndRise()
     {
         isRising= false;
+        rb.velocity = new Vector3(rb.velocity.x,0,rb.velocity.z);
     }
 
 
@@ -400,9 +417,22 @@ public class RobotController : MonoBehaviour
         {
             canJump = true;
             isInAir = false;
+            isFalling=false;
 
             armatureAnimator.SetBool("IsInAir", false);
+            rb.useGravity = true;
         }
     }
 
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.tag == "Ground")
+        {
+            canJump = false;
+            isInAir = true;
+
+            armatureAnimator.SetBool("IsInAir", true);
+            rb.useGravity = false;
+        }
+    }
 }

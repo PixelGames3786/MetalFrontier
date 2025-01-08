@@ -16,7 +16,7 @@ public class FirstMissionCondition : MissionCondition
 
         foreach (var name in targetNames)
         {
-            if (!defeatedLegacys.Contains(name))
+            if (!defeatedUnits.Contains(name))
             {
                 isClear= false;
 
@@ -32,7 +32,7 @@ public class FirstMissionCondition : MissionCondition
 
     public override bool FailConditionCheck()
     {
-        if (defeatedLegacys.Contains(playerName))
+        if (defeatedUnits.Contains(playerName))
         {
             isMissionClear = false;
             isMissionEnd = true;

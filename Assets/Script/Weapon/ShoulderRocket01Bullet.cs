@@ -67,7 +67,7 @@ public class ShoulderRocket01Bullet : MonoBehaviour
             linePoints.RemoveAt(0);
             linePoints.RemoveAt(1);
 
-            if (linePoints.Count == 1)
+            if (linePoints.Count == 2)
             {
                 Destroy(gameObject);
             }
@@ -119,9 +119,20 @@ public class ShoulderRocket01Bullet : MonoBehaviour
 
     public void OnCollisionEnter(Collision collision)
     {
-        IDamageable damageAble = collision.transform.GetComponent<IDamageable>();
+        Transform colTrans = collision.collider.transform;
+        IDamageable damageAble = colTrans.GetComponent<IDamageable>();
 
-        if (damageAble != null)
+        if (damageAble == null)
+        {
+            cts.Cancel();
+            cts.Dispose();
+
+            Destroy(bulletObj);
+
+            return;
+        }
+
+        if (damageAble.CanHit())
         {
             damageAble.Damage(attackData);
 
@@ -130,13 +141,6 @@ public class ShoulderRocket01Bullet : MonoBehaviour
 
             particle.transform.position = collision.contacts[0].point;
 
-            cts.Cancel();
-            cts.Dispose();
-
-            Destroy(bulletObj);
-        }
-        else
-        {
             cts.Cancel();
             cts.Dispose();
 

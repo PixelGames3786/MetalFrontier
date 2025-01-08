@@ -38,7 +38,10 @@ public class TitleController : MonoBehaviour
 
     public void ConfirmButton(InputAction.CallbackContext context)
     {
+        //ƒ[ƒh‚ªI‚í‚é‚Ü‚Å‘Ò‚Â
         if (!SaveDataManager.instance.isLoadComplete) return;
+
+        AudioManager.instance.PlayAudio(AudioData.audioName.TitleConfirm,false);
 
         curtainCanvas.gameObject.SetActive(true);
 

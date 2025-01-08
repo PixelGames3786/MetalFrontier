@@ -45,15 +45,16 @@ public class Pistol01 : WeaponBase
         canShot = false;
 
         Transform bulletObj = Instantiate(BulletPrefab, ShotPosi.position, pivotObj.rotation).transform;
-        Rigidbody bulletRb = bulletObj.GetChild(0).GetComponent<Rigidbody>();
-
-        //自分自身とぶつからないようにする
-        Physics.IgnoreCollision(bulletRb.gameObject.GetComponent<Collider>(), transform.GetChild(0).GetComponent<Collider>(), true);
-        Physics.IgnoreCollision(bulletRb.gameObject.GetComponent<Collider>(), controller.GetComponent<Collider>(), true);
-
-        //ダメージ登録
         Bullet bullet = bulletObj.GetComponentInChildren<Bullet>();
 
+        Rigidbody bulletRb = bullet.rb;
+        Collider bulletCollider = bullet.bulletCollider;
+
+        //自分自身とぶつからないようにする
+        Physics.IgnoreCollision(bulletCollider, transform.GetChild(0).GetComponent<Collider>(), true);
+        Physics.IgnoreCollision(bulletCollider, controller.GetComponent<Collider>(), true);
+
+        //ダメージ登録
         bullet.attackData.type = weaponData.attackType;
         bullet.attackData.damage = weaponData.damage;
 
@@ -75,9 +76,9 @@ public class Pistol01 : WeaponBase
         Vector3 VerticalBlur = verticalBlur * pivotObj.right;
         Vector3 HorizontalBlur = horizontalBlur * pivotObj.up;
 
-        shotVector = shotVector + VerticalBlur + HorizontalBlur;
+        shotVector = (shotVector + VerticalBlur + HorizontalBlur)*weaponData.bulletSpeed;
 
-        bulletRb.AddForce(shotVector*weaponData.bulletSpeed, ForceMode.Impulse);
+        bullet.Shot(shotVector);
 
         //射撃可能間隔を待つ
         isIntervalWait = true;

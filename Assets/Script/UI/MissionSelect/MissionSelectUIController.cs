@@ -280,7 +280,7 @@ public abstract class MissionSelectState : IState
     //ŒÄ‚×‚éŠÖ”‚ğ‚Ü‚Æ‚ß‚éDictionary
     protected Dictionary<string, Action> actionDic;
 
-    //ˆø”‚ ‚è‚ÌŠÖ”‚ğ‚Ü‚Æ‚ß‚é‚æ
+    //ˆø”‚ ‚è‚ÌŠÖ”‚ğ‚Ü‚Æ‚ß‚éDic
     protected Dictionary<string, Action<object[]>> actionDicWithArg;
 
     public void CallFunc(string FuncName)

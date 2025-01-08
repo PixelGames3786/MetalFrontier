@@ -43,7 +43,7 @@ public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>,ISe
     /// <summary>
     /// OnBeforeSerialize
     /// </summary>
-    void ISerializationCallbackReceiver.OnBeforeSerialize()
+    void ISerializationCallbackReceiver.OnBeforeSerialize() //ステータスDataをインポートする際には、コメントアウトをアンコメントする
     {
         /*
         _list.Clear();

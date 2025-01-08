@@ -13,7 +13,7 @@ public abstract class MissionCondition : MonoBehaviour
     //死んだ味方の名前を保存するリスト
     protected List<string> defeatedAlly=new List<string>();
 
-    protected List<string> defeatedLegacys=new List<string>();
+    protected List<string> defeatedUnits=new List<string>();
 
     public Action onConditionChange;
 
@@ -30,9 +30,11 @@ public abstract class MissionCondition : MonoBehaviour
         isMissionClear = true;
     }
 
-    public void AddDefeatedLegacy(string name)
+    public void AddDefeatedUnit(string name)
     {
-        defeatedLegacys.Add(name);
+        Debug.Log(name+"を倒した！");
+
+        defeatedUnits.Add(name);
 
         onConditionChange?.Invoke();
     }

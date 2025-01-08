@@ -10,8 +10,9 @@ using System.Linq;
 using UnityEngine.Rendering;
 using DG.Tweening;
 using UnityEngine.Rendering.Universal;
+using System.Xml.Serialization;
 
-public class RobotPlayerInput : MonoBehaviour,IDamageable
+public class RobotPlayerInput : UnitBase,IDamageable,IShockImpact
 {
     private MissionManager missionManager;
 
@@ -24,7 +25,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     private PlayerUIController uiController;
 
     // 2軸入力を受け取る想定のAction
-    private InputAction moveAction; 
+    private InputAction moveAction,mouseScrollAction; 
     
     //各武器位置の長押しを検知するAction
     private Dictionary<InputAction, Action<InputAction.CallbackContext>> actionMap; //InputActionと対応する関数を入れる辞書 1か0のActionのみ
@@ -33,8 +34,11 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     //一定範囲内の敵を取得するための半径
     public float enemyRadius,enemyRockOffRadius,rotateFactor,camResetTime;
 
-    //ロックオン範囲に入っているターゲット一覧
+    //メインターゲット ロックオン範囲に入っているターゲット一覧
+    private int mainTargetNum = 0;
     private List<Transform> targets=new List<Transform>();
+    private bool isTargetChangeWait = false;
+    private float targetChangeWaitTime = 0f;
 
     //最も近い敵
     public Transform mostNearEnemy { get; private set; }
@@ -45,16 +49,16 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     //武器長押しフラグ
     private bool IsLArmLongPress,IsRArmLongPress,IsLShoulderLongPress,IsRShoulderLongPress;
 
-    private bool camReseting,isFindingTarget=true;
-
-    private bool isWorking=false;
+    private bool camReseting,isFindingTarget=true, isWorking,isShocking;
+    private float shockElapseTime; //衝撃を受けた際のタイムカウント
 
     //敵を検索する際のタグ
     public string enemyTag;
 
     //デリゲート類
-    public Action<string> OnDeathWithName;
     public Action<int> OutOfAreaCountDown;
+
+    private DeathHandler deathHandler;
 
     //ミッション範囲外に出た際のカウントダウン　10秒外にいるとミッション失敗
     private bool IsOutOfArea;
@@ -80,7 +84,9 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         controller = GetComponent<RobotController>();
         uiController = FindObjectOfType<PlayerUIController>();
 
-        RegisterAction();
+        deathHandler = GetComponent<DeathHandler>();
+
+        RegisterAction(); //inputActionの登録
 
         InputControls testControl = new InputControls();
 
@@ -90,38 +96,29 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     private void Start()
     {
         outOfAreaCount = maxOutOfAreaCount;
-
-        //注視点を設定
-        Vector3 screenPoint = new Vector3(Screen.width / 2, Screen.height / 2, 5000);
-        Vector3 lookPosi = Camera.main.ScreenToWorldPoint(screenPoint);
-
-        camFrontVector = lookPosi;
-
-        lookObj = new GameObject("LookObject").transform;
-
-        AwakeParticleSetUp();
     }
 
     // Update is called once per frame
     void Update()
     {
+        CheckShock();
+
         if (!isWorking) return;
 
         Vector2 inputVec = moveAction.ReadValue<Vector2>();
         controller.moveDirInput(inputVec);
 
-        //範囲内の敵をチェック
-        CheckEnemyInRange();
-        CheckEnemyOutRange();
-        GetMostNearEnemy();
-
-        //RotateToTarget(inputVec);
-
-        foreach (Transform trans in targets)
+        if (isTargetChangeWait)
         {
-            Debug.DrawLine(transform.position, trans.position, Color.red);
+            targetChangeWaitTime += Time.deltaTime;
+            if (targetChangeWaitTime>0.3f)
+            {
+                targetChangeWaitTime = 0f;
+                isTargetChangeWait = false;
+            }
         }
-
+        
+        //カメラが向いている方を向く
         LookToCameraPoint();
 
         //武器を長押し中なら
@@ -129,7 +126,18 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         if (IsRArmLongPress) controller.RightArmShot();
         if (IsLShoulderLongPress) controller.LeftShoulderShot();
         if (IsRShoulderLongPress) controller.RightShoulderShot();
+    }
 
+    private void FixedUpdate()
+    {
+        if (!isWorking) return;
+
+        //範囲内の敵をチェック
+        CheckEnemyInRange();
+        CheckEnemyOutRange();
+        //GetMostNearEnemy();
+
+        uiController.LockOnUpdate();
     }
 
     //一定範囲内に敵がいないかチェックしてロックオンする
@@ -144,7 +152,9 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
             //敵タグがついているか確認
             if (hit.collider.CompareTag(enemyTag))
             {
-                ITargetable targetable = hit.collider.GetComponent<ITargetable>();
+                Transform hitTrans = hit.collider.transform;
+
+                ITargetable targetable = hitTrans.GetComponent<ITargetable>();
 
                 if (targetable==null)
                 {
@@ -152,10 +162,9 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
                 }
 
                 //既にターゲッティングしていないかつ現在ターゲッティング可能ならばターゲッティングする
-                if (!targets.Contains(hit.transform) && targetable.CanTarget() && !CheckObstacle(hit.transform))
+                if (!targets.Contains(hitTrans) && targetable.CanTarget() && !CheckObstacle(hitTrans))
                 {
-                    targets.Add(hit.transform);
-                    uiController.SetRockOnUI(targets);
+                    AddTarget(hitTrans);
                 }
             }
         }
@@ -185,11 +194,17 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
 
         foreach (Transform enemy in targets)
         {
+            //そもそも消滅しているなら外す
+            if(enemy==null)
+            {
+                removeList.Add(enemy);
+                continue;
+            }
+
             //もしカメラ外に出ているなら問答無用でターゲットから外す
             if (!enemy.GetComponent<ITargetable>().IsVisible())
             {
                 removeList.Add(enemy);
-
                 continue;
             }
 
@@ -219,11 +234,8 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
 
         foreach (Transform remove in removeList)
         {
-            targets.Remove(remove);
+            RemoveTarget(remove);
         }
-
-        //ターゲット一覧に何らかの変更があったならターゲットUIの更新を行う
-        uiController.SetRockOnUI(targets);
     }
 
     //ロックオンしている敵の中で最も近い敵を取得
@@ -260,12 +272,105 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         }
     }
 
+    
+    private void AddTarget(Transform newTarget) //ロックオンに敵を追加 メインターゲット設定なども行う
+    {
+        targets.Add(newTarget);
+
+        controller.SetTarget(targets[mainTargetNum]);
+
+        List<Transform> subTargets = new List<Transform>(targets);
+        subTargets.RemoveAt(mainTargetNum);
+
+        uiController.SetLockOnUI(targets[mainTargetNum],subTargets);
+    }
+
+    private void RemoveTarget(Transform remove) //ロックオン中の敵を削除
+    {
+        //現在のメインターゲットより先に追加されたターゲットを消すなら一つ下げる
+        int removeIndex = targets.IndexOf(remove);
+
+        if (removeIndex<=mainTargetNum)
+        {
+            mainTargetNum--;
+            if (mainTargetNum < 0) mainTargetNum = 0;
+        }
+
+        targets.Remove(remove);
+
+        if (targets.Count == 0) //メインターゲットが削除対象ならば削除
+        {
+            controller.SetTarget(null);
+
+            uiController.SetLockOnUI(null, targets);
+        }
+        else
+        {
+            List<Transform> subTargets = new List<Transform>(targets);
+            subTargets.RemoveAt(mainTargetNum);
+
+            controller.SetTarget(targets[mainTargetNum]);
+            uiController.SetLockOnUI(targets[mainTargetNum], subTargets);
+        }
+    }
+
+    private void ChangeTarget(InputAction.CallbackContext context) //メインターゲット変更
+    {
+        //そもそも変更できなかったらReturn
+        if (targets.Count <=1 || isTargetChangeWait) return;
+
+        isTargetChangeWait = true;
+
+        Vector2 scrollVec = mouseScrollAction.ReadValue<Vector2>();
+
+        Debug.Log(scrollVec.y + "現在のマウススクロール");
+
+        //一つ前のサブターゲットに切り替える
+        if (scrollVec.y<0)
+        {
+            mainTargetNum--;
+        }
+
+        //一つ後のサブターゲットに切り替える
+        if (scrollVec.y>0)
+        {
+            mainTargetNum++;
+        }
+
+        // インデックスをループさせる
+        if (mainTargetNum >= targets.Count) mainTargetNum = 0;
+        if (mainTargetNum < 0) mainTargetNum = targets.Count - 1;
+
+        List<Transform> subTargets = new List<Transform>(targets);
+        subTargets.RemoveAt(mainTargetNum);
+
+        controller.SetTarget(targets[mainTargetNum]);
+        uiController.SetLockOnUI(targets[mainTargetNum], subTargets);
+    }
+
     void OnDrawGizmosSelected()
     {
         // シーンビューで範囲を可視化
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, enemyRadius);
     } //索敵範囲をUI上で表示する
+
+    private void CheckShock() //衝撃を受けて操作不可になっているかどうかチェック　時間経過で回復
+    {
+        if (!isShocking) return;
+
+        shockElapseTime += Time.deltaTime;
+
+        //TODO 衝撃状態から回復する時間を変動させる
+        if (shockElapseTime>=1f)
+        {
+            shockElapseTime=0f;
+
+            isShocking = false;
+            isWorking = true;
+            SetOparete(true);
+        }
+    }
 
     //ターゲットの方向を向く
     private void RotateToTarget(Vector2 input)
@@ -361,12 +466,32 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         controller.canOperate = val;
     }
 
+    public override void UnitSetUp()
+    {
+        AwakeParticleSetUp();
+        LegacySetUp();
+    }
+
+    public override void UnitActivate()
+    {
+        SetWorking(true);
+        SetOparete(true);
+    }
+
+    public override void UnitDeactivate()
+    {
+        SetWorking(false);
+        SetOparete(false);
+    }
+
     //InputActionの登録を行う
     public void RegisterAction()
     {
         InputControls testControl = new InputControls();
 
         moveAction = testControl.Player.Move;
+        mouseScrollAction = testControl.Player.TargetChange;
+        mouseScrollAction.performed += ChangeTarget;
 
         actionMap = new Dictionary<InputAction, Action<InputAction.CallbackContext>>
         {
@@ -382,7 +507,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
             { testControl.Player.Jump, OnJump },
             { testControl.Player.Rise, StartRise },
             { testControl.Player.Awake,ChangeAwake},
-            { testControl.Player.CameraReset,CameraReset},
+            { testControl.Player.Fall,OnFall },
         };
 
         canselActionMap = new Dictionary<InputAction, Action<InputAction.CallbackContext>>
@@ -409,7 +534,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     }
 
     //ダメージを受ける
-    public void Damage(AttackData attack)
+    void IDamageable.Damage(AttackData attack)
     {
         //攻撃タイプと耐性を考慮してダメージを決定
         float damage = attack.damage;
@@ -437,6 +562,21 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
             print("死んだぜ！");
             Die();
         }
+    }
+
+    bool IDamageable.CanHit()
+    {
+        return true;
+    }
+
+    //衝撃を受ける
+    void IShockImpact.AddImpact(Vector3 impactVel)
+    {
+        isShocking = true;
+        isWorking = false;
+        SetOparete(false);
+
+        controller.AddForce(impactVel,ForceMode.Impulse);
     }
 
     //ブーストを始める際にポストエフェクトをかける
@@ -474,7 +614,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
         controller.SetArmLookAt(false);
 
         //デリゲートの呼び出し
-        OnDeathWithName?.Invoke(gameObject.name);
+        deathHandler.DeathInvoke();
 
         //死亡時パーティクル
         GameObject particle = Instantiate(deathParticlePrefab);
@@ -603,22 +743,16 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     private void EndBoost(InputAction.CallbackContext context)=> controller.EndBoost();
 
     //ジャンプボタンが押されたとき
-    private void OnJump(InputAction.CallbackContext context)
-    {
-        controller.OnJump();
-    }
+    private void OnJump(InputAction.CallbackContext context)=> controller.OnJump();
+
+    //落下ボタンが押されたとき
+    private void OnFall(InputAction.CallbackContext context) => controller.OnFall();
 
     //ジャンプボタン長押し（上昇）がされたとき
-    private void StartRise(InputAction.CallbackContext context)
-    {
-        controller.StartRise();
-    }
+    private void StartRise(InputAction.CallbackContext context)=> controller.StartRise();
 
     //ジャンプボタン長押しが終わったら
-    private void EndRise(InputAction.CallbackContext context)
-    {
-        controller.EndRise();
-    }
+    private void EndRise(InputAction.CallbackContext context)=> controller.EndRise();
 
     //覚醒ボタンが押されたら
     private void ChangeAwake(InputAction.CallbackContext context)=> controller.AwakeChange();
@@ -632,12 +766,24 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     {
         //注視点を設定
         Vector3 screenPoint = new Vector3(Screen.width / 2, Screen.height / 2, 5000);
-        Vector3 lookPosi = Camera.main.ScreenToWorldPoint(screenPoint);
+        Vector3 lookPosi = Camera.main.transform.forward*5000;
 
-        // Y軸を無視するために注視点のY座標を現在のオブジェクトのY座標に固定
-        lookPosi.y = transform.position.y;
+        //地上にいるのなら上下に向かない(Y軸を現在のY座標に固定)
+        if (!controller.isInAir)
+        {
+            //Y軸を無視するために注視点のY座標を現在のオブジェクトのY座標に固定
+            lookPosi.y = transform.position.y;
+        }
+        else
+        {
+            //lookPosi.y = Mathf.Clamp(lookPosi.y, transform.position.y - 5, transform.position.y + 5);
+
+        }
 
         transform.LookAt(lookPosi);
+
+        Debug.DrawLine(transform.position, lookPosi, Color.red);
+
     }
 
     //カメラ方向リセット
@@ -674,7 +820,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
             controller.statusControl.SetTarget(null);
             controller.SetTarget(null);
 
-            uiController.SetRockOnUI(null);
+            //uiController.SetLockOnUI(null);
 
             // 通常カメラにロックオンカメラと同じ位置と向きをセット
             CinemachinePOV pov = normalCam.GetCinemachineComponent<CinemachinePOV>();
@@ -697,6 +843,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     private void OnDestroy()
     {
         moveAction.Dispose();
+        mouseScrollAction.Dispose();
 
         foreach (var entry in actionMap)
         {
@@ -711,6 +858,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     private void OnEnable()
     {
         moveAction.Enable();
+        mouseScrollAction.Enable();
 
         foreach (var entry in actionMap)
         {
@@ -725,6 +873,7 @@ public class RobotPlayerInput : MonoBehaviour,IDamageable
     private void OnDisable()
     {
         moveAction.Disable();
+        mouseScrollAction.Disable();
 
         foreach (var entry in actionMap)
         {

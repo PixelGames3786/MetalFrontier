@@ -14,7 +14,7 @@ public class MissionResultManager : MonoBehaviour
 
     public GameObject itemInfoPrefab;
 
-    public RectTransform missionParent,getColParent,getItemParent;
+    public RectTransform titleParent,missionParent,getColParent,getItemParent;
 
     public TextMeshProUGUI missionNameText,clearOrFailText,getColText,backDockText;
 
