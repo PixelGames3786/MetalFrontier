@@ -22,7 +22,7 @@ public class EnemyControlTest : UnitBase, IDamageable, ITargetable
     public SerializableDictionary<LegacySettingData.WeaponSetPosi, WeaponPartsData> weaponPartsDic = new SerializableDictionary<LegacySettingData.WeaponSetPosi, WeaponPartsData>();
 
     //敵を感知する範囲　敵との最小・最大距離　最小高低差
-    public float enemyRadius, enemyMinDis, enemyMaxDis, enemyMinElevation;
+    public float enemyRadius, enemyMinDis, enemyMaxDis, enemyMinElevation,enemyMaxElevation;
     public string enemyTag;
 
     public Transform target { get; set; }
@@ -35,6 +35,8 @@ public class EnemyControlTest : UnitBase, IDamageable, ITargetable
     private MeshRenderer[] allMeshes;
 
     public GameObject deathParticlePrefab;
+
+    public float debugDis;
 
     // Start is called before the first frame update
     void Start()
@@ -395,7 +397,9 @@ namespace RegularEnemyControl
         {
             //ターゲットとの距離を計算
             float distance = Vector3.Distance(enemyAI.transform.position, enemyAI.target.position);
-            float elevation = enemyAI.target.position.y - enemyAI.transform.position.y;
+            float elevation = enemyAI.target.position.y - enemyAI.transform.position.y; //高低差
+
+            enemyAI.debugDis = elevation;
 
             Vector3 toTargetDir = (enemyAI.target.position - enemyAI.transform.position).normalized;
             Vector3 localDir = enemyAI.transform.InverseTransformDirection(toTargetDir);
@@ -409,14 +413,14 @@ namespace RegularEnemyControl
                 controller.moveDirInput(new Vector2(localDir.x, localDir.z));
             }
             //もしも一定距離以上近づいたらベクトルを取り離れる
-            else if (distance < enemyAI.enemyMinDis)
+            else if (distance < enemyAI.enemyMinDis && elevation>enemyAI.enemyMaxElevation)
             {
                 //XYの入力
                 controller.moveDirInput(new Vector2(localDir.x * -1, localDir.z * -1));
             }
             else
             {
-                //XYの入力
+                //XYの入力なし
                 controller.moveDirInput(Vector2.zero);
             }
 
@@ -428,6 +432,13 @@ namespace RegularEnemyControl
             }
             else
             {
+                controller.EndRise();
+            }
+
+            //もしも一定以上高低差がありすぎたら落ちる
+            if (elevation<enemyAI.enemyMaxElevation)
+            {
+                controller.StartFall();
                 controller.EndRise();
             }
         }

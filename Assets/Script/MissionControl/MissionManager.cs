@@ -100,13 +100,25 @@ public class MissionManager : MonoBehaviour
     //ミッションを失敗させる
     public void MissionFail()
     {
+        condition.MissionEnd();
         MissionStop();
+        resultManager.ResultSetUp();
+    }
+
+    //ミッションから帰還を選択したとき
+    public void MissionDrop()
+    {
+        condition.MissionEnd();
+        MissionStop();
+        GetReward();
         resultManager.ResultSetUp();
     }
 
     //クリア時に、一時保存していたアイテムを手に入れたりする処理
     public void GetReward()
     {
+        if (!condition.isMissionClear) return; //クリアしていなかったら手に入らない
+
         SaveData saveData = SaveDataManager.instance.saveData;
 
         foreach (ItemData data in condition.missionData.clearGetItems)
@@ -114,17 +126,18 @@ public class MissionManager : MonoBehaviour
             getItems.Add(new HavingItem(data.ItemNumber));
         }
 
-        foreach (var data in getItems) Debug.Log(data.itemData.itemName);
-
         //報酬入手
         saveData.ColChange(condition.missionData.clearGetCol);
         saveData.AddItemRange(getItems.ToArray());
 
         //ミッション解放
-        foreach (MissionData mission in condition.missionData.clearOpenMisison)
+        foreach (MissionData mission in condition.missionData.clearOpenMission)
         {
             saveData.OpenMission(mission.missionNumber);
         }
+
+        //非同期でセーブデータ保存
+        SaveDataManager.instance.SaveFileWriteAsync();
     }
 
     //ミッション中に入手したアイテムを一時保存　入手したアイテムはクリア時に実際にプレイヤーに渡される
@@ -177,12 +190,15 @@ namespace MissionManageState
     //シーンが読み込まれた際に、シーンのセットアップを行うステート
     public class CountDownState : MissionState
     {
+        private MissionCondition condition;
+
         //コンストラクタ　初期化
         public CountDownState(MissionManager manager)
         {
             State = MissionStateEnum.CountDown;
 
             missionManager = manager;
+            condition = manager.condition;
         }
 
         //ステートに入った際に、セットアップを行う
@@ -204,7 +220,9 @@ namespace MissionManageState
         private void MissionSetUp()
         {
             //Conditionが変更された際にクリア判定をするためのデリゲート
-            missionManager.condition.onConditionChange += missionManager.CheckClearOrFail;
+            condition.onConditionChange += missionManager.CheckClearOrFail;
+
+            condition.MissionSetUp();
 
             //敵・プレイヤーのセットアップを行う
             foreach (UnitBase unit in missionManager.allUnit)
@@ -222,6 +240,7 @@ namespace MissionManageState
             //黒幕をフェードアウトして、カウントダウンに入る 一旦直接操作できるようにする
             missionManager.curtain.DOFade(0f, 0.5f).OnComplete(() =>
             {
+                missionManager.condition.MissionStart();
                 missionManager.curtain.gameObject.SetActive(false);
 
                 foreach (UnitBase unit in missionManager.allUnit)
@@ -350,22 +369,26 @@ namespace MissionManageState
 
         public void UpArrowAction(InputAction.CallbackContext context)
         {
-            nowSelectNum--;
+            if (nowSelectNum != 0) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
 
+            nowSelectNum--;
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = missionManager.menuSelectArrow.localPosition;
-            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
-
-            missionManager.menuSelectArrow.localPosition = arrowPosi;
+            UpdateArrowPosition();
         }
 
         public void DownArrowAction(InputAction.CallbackContext context)
         {
-            nowSelectNum++;
+            if (nowSelectNum != maxSelectNum) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
 
+            nowSelectNum++;
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
+            UpdateArrowPosition();
+        }
+
+        private void UpdateArrowPosition()
+        {
             Vector2 arrowPosi = missionManager.menuSelectArrow.localPosition;
             arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
 
@@ -374,6 +397,8 @@ namespace MissionManageState
 
         public void ConfirmAction(InputAction.CallbackContext context)
         {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuConfirm, false);
+
             //現在選択している種類の商品のスクロールビューを表示する
             MenuOptions option = (MenuOptions)nowSelectNum;
 
@@ -387,7 +412,7 @@ namespace MissionManageState
 
                 case MenuOptions.Drop:
 
-                    MissionFail();
+                    MissionDrop();
 
                     break;
             }
@@ -398,35 +423,38 @@ namespace MissionManageState
             missionManager.menuGroup.DOFade(0f, 0.5f).SetUpdate(true).OnComplete(() =>
             {
                 missionManager.menuGroup.gameObject.SetActive(false);
-                Time.timeScale = 1;
 
-                Animator[] animators = GameObject.FindObjectsOfType<Animator>();
-
-                foreach (var animator in animators)
-                {
-                    animator.enabled = true;
-                }
+                WorldResume();
 
                 missionManager.StateTranstion(MissionStateEnum.InMission);
             });
         }
 
-        private void MissionFail()
+        private void MissionDrop()
         {
             missionManager.menuGroup.DOFade(0f, 0.5f).SetUpdate(true).OnComplete(() =>
             {
                 missionManager.menuGroup.gameObject.SetActive(false);
-                Time.timeScale = 1;
 
-                Animator[] animators = GameObject.FindObjectsOfType<Animator>();
+                WorldResume();
 
-                foreach (var animator in animators)
-                {
-                    animator.enabled = true;
-                }
-
-                missionManager.MissionFail();
+                missionManager.MissionDrop();
             });
+
+            OnExit(); //InputActionを解除
+        }
+
+        //停止していた時間を再度動かす
+        private void WorldResume()
+        {
+            Time.timeScale = 1;
+
+            Animator[] animators = GameObject.FindObjectsOfType<Animator>();
+
+            foreach (var animator in animators)
+            {
+                animator.enabled = true;
+            }
         }
 
     }
@@ -490,7 +518,9 @@ namespace MissionManageState
                 }
 
                 Debug.Log("カウントダウン終了、帰還開始！");
+                missionManager.GetReward();
                 missionManager.MissionStop();
+                missionManager.condition.MissionEnd();
                 missionManager.resultManager.ResultSetUp();
             }
             catch (OperationCanceledException)
@@ -509,6 +539,7 @@ namespace MissionManageState
 
             missionManager.GetReward();
             missionManager.MissionStop();
+            missionManager.condition.MissionEnd();
             missionManager.resultManager.ResultSetUp();
         }
     }

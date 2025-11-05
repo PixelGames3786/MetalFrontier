@@ -13,6 +13,16 @@ public class GiantAnimationEventHandler : MonoBehaviour
         
     }
 
+    public void StartMoving()
+    {
+        control.SetMoving(true);
+    }
+
+    public void StopMoving()
+    {
+        control.SetMoving(false);
+    }
+
     //animationEvent‚Íˆø”‚ªint string object‚µ‚©ó‚¯•t‚¯‚È‚¢‚Ì‚Åstring‚©‚çbool‚É•ÏŠ·‚·‚é
     public void ChangeIsAttack(string val)
     {

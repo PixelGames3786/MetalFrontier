@@ -70,14 +70,12 @@ public class SaveData
         settingData.RefleshPartsNumber();
 
         missionNumList.Add(1);
-        missionNumList.Add(2);
 
         //TODO デバッグ用に最初にぱーつをいくつか手に入れる
         AddItemRange(new List<int> { 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 601,607, 602,606 });
 
-        shopGoodsNumList.Add(601);
-        shopGoodsNumList.Add(602);
-        shopGoodsNumList.Add(301);
+        AddItemRange(new List<int> {601, 607});
+        shopGoodsNumList.AddRange(new int[] { 306, 307, 308, 309, 310, 311, 312, 313, 314, 315,601,602,603,604,605,606,607 });
 
         LegacyPartsChange(PartsType.Head, AddItem(301));
         LegacyPartsChange(PartsType.Body, AddItem(302));
@@ -100,13 +98,15 @@ public class SaveData
         having.equiped = true;
     }
 
-    public void WeaponPartsChange(LegacySettingData.WeaponSetPosi setPosi, HavingItem having)
+    public bool WeaponPartsChange(LegacySettingData.WeaponSetPosi setPosi, HavingItem having)
     {
+        bool changed = false;
+
         if (having.equiped)
         {
             Debug.Log("装備中であるためアイテムを外す");
 
-            WeaponPartsRemove(setPosi, having);
+            changed=WeaponPartsRemove(setPosi, having);
         }
         else
         {
@@ -119,7 +119,7 @@ public class SaveData
 
                 having.equiped = true;
 
-                return;
+                changed = true;
             }
             else //既になんらかのパーツが装備されている部位に装備する場合、前のパーツの装備状況を外す
             {
@@ -128,25 +128,32 @@ public class SaveData
                 settingData.SetWeaponParts(setPosi, having);
 
                 settingData.WeaponsNumber[setPosi].equiped = true;
+
+                changed = true;
             }
         }
+
+        return changed;
     }
 
     //部位につけられている武器を外す
-    public void WeaponPartsRemove(LegacySettingData.WeaponSetPosi setPosi, HavingItem having)
+    public bool WeaponPartsRemove(LegacySettingData.WeaponSetPosi setPosi, HavingItem having)
     {
         //もしも既に装備されているアイテムと同じならば外す
         if (having == settingData.WeaponsNumber[setPosi])
         {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.PartsChange, false);
             settingData.SetWeaponParts(setPosi, null);
 
             having.equiped = false;
 
             Debug.Log("外した！");
+            return true;
         }
         else
         {
             Debug.Log("外せないなぁ！");
+            return false;
         }
     }
 
@@ -211,6 +218,7 @@ public class SaveData
     //ミッションを開放する
     public void OpenMission(int missionNum)
     {
+        Debug.Log(missionNum);
         missionNumList.Add(missionNum);
     }
 }

@@ -88,7 +88,7 @@ public class Bullet : MonoBehaviour
         catch (OperationCanceledException)
         {
             // キャンセルされた場合の処理
-            Debug.Log("オブジェクト削除がキャンセルされました。");
+            //Debug.Log("オブジェクト削除がキャンセルされました。");
         }
     }
 }

@@ -24,6 +24,9 @@ public class BodyPartsData : ItemData
     //1つのパーツに複数のメッシュが含まれる場合があるため
     public SerializableDictionary<string,Mesh> ObjnameMeshPairs=new SerializableDictionary<string, Mesh>();
 
+    //TrailRendererのプレハブのための辞書
+    public SerializableDictionary<string,Transform> ObjnameTrailPairs=new SerializableDictionary<string, Transform>();
+
     //パラメータ
     public float hpFactor;
 

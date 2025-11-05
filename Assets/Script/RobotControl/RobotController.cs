@@ -14,6 +14,7 @@ public class RobotController : MonoBehaviour
     private Rigidbody rb;
 
     public RobotSetUpController setupControl;
+    public RobotTrailController trailControl;
     public RobotStatusController statusControl;
 
     private LegacySpecStatus status;
@@ -31,8 +32,8 @@ public class RobotController : MonoBehaviour
     private RobotArmControl leftArm, rightArm;
 
     //武器系
-    public WeaponBase LeftArmWeapon { get; private set; }
-    public WeaponBase RightArmWeapon { get; private set; }
+    public WeaponBase LArmWeapon { get; private set; }
+    public WeaponBase RArmWeapon { get; private set; }
     public WeaponBase LShoulderWeapon { get; private set; }
     public WeaponBase RShoulderWeapon { get; private set; }
 
@@ -45,6 +46,7 @@ public class RobotController : MonoBehaviour
     private bool isBoosting,isRising;//ブースト中　上昇中　空中にいるか
     public bool isInAir { get; private set; }
     public bool isFalling { get; private set; }
+    public bool isDead {  get; private set; }
 
     [SerializeField]
     private bool canJump = true,camReseting; //カメラリセット中か　
@@ -53,7 +55,7 @@ public class RobotController : MonoBehaviour
     private bool isAwakening; //覚醒中か
     public event Action onAwakeStart,onAwakeEnd;
 
-    public event Action onDied,onStartBoost;
+    public event Action onDied,onBoostStart,onBoostEnd;
 
     private Vector2 moveInput;
     private Vector3 moveDirection;
@@ -83,6 +85,11 @@ public class RobotController : MonoBehaviour
         //向いている方向に基づいて移動ベクトルを計算
         moveDirection = ((transform.forward * moveInput.y) + (transform.right * moveInput.x)).normalized;
 
+        if (!isInAir)
+        {
+            moveDirection.y = 0f; //地上にいるならば上昇下降はしない
+        }
+
         /*
         //ターゲッティング中かどうか
         if (target && lookTargetSetting)
@@ -94,7 +101,7 @@ public class RobotController : MonoBehaviour
         //覚醒中ならば徐々に覚醒量を減らしてく
         if (isAwakening)
         {
-            statusControl.QuorraUse(Time.deltaTime*status.quorraUseRate);
+            statusControl.QuorraUse(Time.deltaTime*status.quorraUseRate*2);
         }
         else
         {
@@ -113,6 +120,7 @@ public class RobotController : MonoBehaviour
     {
         Vector3 velocity = new Vector3();
 
+        //ブースト中ならば
         if (isBoosting)
         {
             rb.AddForce(moveDirection * status.boostSpeed * Time.deltaTime*5, ForceMode.Impulse);
@@ -128,9 +136,9 @@ public class RobotController : MonoBehaviour
             //使用済みブースト量を増やす
             statusControl.BoostUse(boostUsage);
         }
-        else
+        else //ブースト中でないなら
         {
-            rb.AddForce(moveDirection * status.moveSpeed * Time.deltaTime, ForceMode.Impulse);
+            rb.AddForce(moveDirection * status.moveSpeed * Time.deltaTime*5, ForceMode.Impulse);
 
             //最大移動量を制限
             velocity.x = Mathf.Clamp(rb.velocity.x, status.maxVel.x * -1, status.maxVel.x);
@@ -218,6 +226,8 @@ public class RobotController : MonoBehaviour
     //死亡時処理
     public void Die()
     {
+        isDead = true;
+
         onDied?.Invoke();
 
         armatureAnimator.SetTrigger("DeathTrigger");
@@ -225,6 +235,7 @@ public class RobotController : MonoBehaviour
         GetComponent<CapsuleCollider>().radius = 1.8f;
 
         rb.constraints = RigidbodyConstraints.None;
+        rb.useGravity = true;
 
         rb.AddTorque(transform.forward*-1f * 500f,ForceMode.VelocityChange); //死亡時に後ろに倒れる
     }
@@ -234,12 +245,12 @@ public class RobotController : MonoBehaviour
     {
         if (setupControl.createdWeaponsObj[LegacySettingData.WeaponSetPosi.LeftArm]!=null)
         {
-            if (LeftArmWeapon==null)
+            if (LArmWeapon==null)
             {
-                LeftArmWeapon = setupControl.createdWeaponsObj[LegacySettingData.WeaponSetPosi.LeftArm].GetComponent<WeaponBase>();
+                LArmWeapon = setupControl.createdWeaponsObj[LegacySettingData.WeaponSetPosi.LeftArm].GetComponent<WeaponBase>();
             }
 
-            LeftArmWeapon.Use(target);
+            LArmWeapon.Use(target);
         }
     }
 
@@ -248,12 +259,12 @@ public class RobotController : MonoBehaviour
     {
         if (setupControl.createdWeaponsObj[LegacySettingData.WeaponSetPosi.RightArm] != null)
         {
-            if (RightArmWeapon == null)
+            if (RArmWeapon == null)
             {
-                RightArmWeapon = setupControl.createdWeaponsObj[LegacySettingData.WeaponSetPosi.RightArm].GetComponent<WeaponBase>();
+                RArmWeapon = setupControl.createdWeaponsObj[LegacySettingData.WeaponSetPosi.RightArm].GetComponent<WeaponBase>();
             }
 
-            RightArmWeapon.Use(target);
+            RArmWeapon.Use(target);
         }
     }
 
@@ -325,19 +336,30 @@ public class RobotController : MonoBehaviour
 
         isBoosting = true;
 
+        //急加速
+        rb.velocity=moveDirection * status.boostSpeed*0.5f;
+
         armatureAnimator.SetBool("IsBoosting", true);
 
-        onStartBoost?.Invoke();
+        //SEを鳴らす
+        AudioManager.instance.PlayAudio(AudioData.audioNameEnum.BoostStart,false,transform.position);
+        AudioManager.instance.PlayAudio(AudioData.audioNameEnum.Boosting,true,parent:transform);
+
+        onBoostStart?.Invoke();
     }
 
     //ブースト終了
     public void EndBoost()
     {
         //print("ブースと終了");
-
         isBoosting = false;
 
+        //SEを止める
+        AudioManager.instance.StopBGM(AudioData.audioNameEnum.Boosting,true);
+
         armatureAnimator.SetBool("IsBoosting", false);
+
+        onBoostEnd?.Invoke();
     }
 
     //ジャンプ
@@ -356,7 +378,7 @@ public class RobotController : MonoBehaviour
     }
 
     //空中にいるときに落下する
-    public void OnFall()
+    public void StartFall()
     {
         isFalling= true;
         rb.useGravity = true;
@@ -372,6 +394,7 @@ public class RobotController : MonoBehaviour
         rb.useGravity = false;
     }
 
+    //上昇を終了
     public void EndRise()
     {
         isRising= false;
@@ -428,11 +451,6 @@ public class RobotController : MonoBehaviour
     {
         if (collision.gameObject.tag == "Ground")
         {
-            canJump = false;
-            isInAir = true;
-
-            armatureAnimator.SetBool("IsInAir", true);
-            rb.useGravity = false;
         }
     }
 }

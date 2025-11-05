@@ -20,7 +20,7 @@ public class GiantMissionCondition : MissionCondition
             {
                 isClear= false;
 
-                break;
+                return isClear;
             }
         }
 

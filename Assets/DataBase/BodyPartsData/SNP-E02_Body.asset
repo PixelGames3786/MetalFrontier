@@ -17,6 +17,7 @@ MonoBehaviour:
   price: 0
   itemName: "SNP-E02 \u80F4\u4F53\u90E8"
   Description: "\u306A\u3057"
+  itemIcon: {fileID: 21300000, guid: 44b38fdaac188cb4f945ec1f69675033, type: 3}
   Type: 2
   maxModuleSlot: 0
   minModuleSlot: 0

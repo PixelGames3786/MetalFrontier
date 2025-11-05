@@ -10,7 +10,10 @@ public class ShopGoodsSimpleInfo : MonoBehaviour
     public ItemData goodsData {  get; private set; }
 
     [SerializeField]
-    private Image forcusImage; //フォーカス（現在選択中かの画像）
+    private CanvasGroup forcusImage; //フォーカス（現在選択中かの画像）
+
+    [SerializeField]
+    private Image iconImage;
 
     public TextMeshProUGUI goodsNameText,goodsPriceText;
 
@@ -42,8 +45,7 @@ public class ShopGoodsSimpleInfo : MonoBehaviour
     {
         goodsData = itemData;
 
-        goodsNameText.text = itemData.itemName;
-        goodsPriceText.text = itemData.price+" col";
+        iconImage.sprite=itemData.itemIcon;
     }
 
     public void OnClick()

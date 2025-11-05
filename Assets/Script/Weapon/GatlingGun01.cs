@@ -82,6 +82,8 @@ public class GatlingGun01 : WeaponBase
 
         shotVector = (shotVector + VerticalBlur + HorizontalBlur)*weaponData.bulletSpeed;
 
+        AudioManager.instance.PlayAudio(weaponAudioData, false,transform.position);
+
         bullet.Shot(shotVector);
 
         //ŽËŒ‚‰Â”\ŠÔŠu‚ð‘Ò‚Â

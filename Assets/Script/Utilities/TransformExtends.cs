@@ -4,6 +4,19 @@ using UnityEngine;
 
 public static class TransformExtends
 {
+    //全子オブジェクト取得（孫は含めない）
+    public static Transform[] GetChildren(this Transform Object)
+    {
+        Transform[] temp= new Transform[Object.childCount];
+
+        for(int i=0;i<Object.childCount;i++)
+        {
+            temp[i]=Object.GetChild(i);
+        }
+
+        return temp;
+    }
+
     //全子オブジェクト削除
     public static void DestroyAllChilds(this Transform Object)
     {

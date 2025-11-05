@@ -19,8 +19,7 @@ public class FirstMissionCondition : MissionCondition
             if (!defeatedUnits.Contains(name))
             {
                 isClear= false;
-
-                break;
+                return isClear;
             }
         }
 

@@ -6,7 +6,7 @@ using DG.Tweening;
 
 public class ShopGoodsStatusUI : MonoBehaviour
 {
-    private ItemData goodsData;
+    protected ItemData goodsData;
 
     public TextMeshProUGUI nameText, descriptText, priceText;
 
@@ -32,7 +32,7 @@ public class ShopGoodsStatusUI : MonoBehaviour
         GetComponent<RectTransform>().DOScaleX(0f, 0.5f);
     }
 
-    public void InitializeUI(ItemData data)
+    public virtual void InitializeUI(ItemData data)
     {
         goodsData = data;
 

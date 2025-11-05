@@ -7,7 +7,7 @@ using System;
 using DG.Tweening;
 using UnityEngine.InputSystem;
 using TMPro;
-using CustomizeUI;
+using CustomizeUIState;
 
 public class CustomizeUIController : MonoBehaviour
 {
@@ -103,13 +103,15 @@ public class CustomizeUIController : MonoBehaviour
     //武器パーツの変更
     public void WeaponPartsChange(LegacySettingData.WeaponSetPosi posi, int partsNum, HavingItem having)
     {
-        SaveDataManager.instance.saveData.WeaponPartsChange(posi, having);
+        bool changed= SaveDataManager.instance.saveData.WeaponPartsChange(posi, having);
+
+        if(changed) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.PartsChange, false);
 
         robotControl.PartsSetReflect();
     }
 
     //ステートの切り替え
-    public void StateTranstion(CustomizeControlState.CustomizeUIState transitState)
+    public void StateTranstion(CustomizeControlState.StateEnum transitState)
     {
         nowState.OnExit();
 
@@ -161,12 +163,12 @@ public class CustomizeUIController : MonoBehaviour
     }
 }
 
-namespace CustomizeUI
+namespace CustomizeUIState
 {
     //基底ステートの定義
     public abstract class CustomizeControlState : IState
     {
-        public enum CustomizeUIState
+        public enum StateEnum
         {
             SetUp,
             Wait,
@@ -176,7 +178,7 @@ namespace CustomizeUI
             OpenedScrollView,
         }
 
-        public CustomizeUIState state;
+        public StateEnum state;
 
         protected CustomizeUIController uiControl;
 
@@ -237,7 +239,7 @@ namespace CustomizeUI
         //コンストラクタ　初期化
         public SetUpState(CustomizeUIController controller)
         {
-            state = CustomizeUIState.SetUp;
+            state = StateEnum.SetUp;
 
             uiControl = controller;
         }
@@ -265,7 +267,7 @@ namespace CustomizeUI
 
             uiControl.robotControl.PartsSetReflect();
 
-            uiControl.StateTranstion(CustomizeUIState.Wait);
+            uiControl.StateTranstion(StateEnum.Wait);
         }
     }
 
@@ -274,15 +276,9 @@ namespace CustomizeUI
         //コンストラクタ　初期化
         public WaitState(CustomizeUIController controller)
         {
-            state = CustomizeUIState.Wait;
+            state = StateEnum.Wait;
 
             uiControl = controller;
-        }
-
-        //ステートに入った際に、セットアップを行う
-        public override void OnEnter()
-        {
-
         }
     }
 
@@ -302,7 +298,7 @@ namespace CustomizeUI
         //コンストラクタ　初期化
         public SelectMenuState(CustomizeUIController controller)
         {
-            state = CustomizeUIState.SelectMenu;
+            state = StateEnum.SelectMenu;
 
             uiControl = controller;
 
@@ -366,32 +362,28 @@ namespace CustomizeUI
 
         public void UpArrowAction(InputAction.CallbackContext context)
         {
-            nowSelectNum--;
+            if (nowSelectNum != 0) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
 
+            nowSelectNum--;
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = uiControl.genreSelectArrowRect.localPosition;
-
-            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
-
-            uiControl.genreSelectArrowRect.localPosition = arrowPosi;
+            UpdateArrowPosition();
         }
 
         public void DownArrowAction(InputAction.CallbackContext context)
         {
-            nowSelectNum++;
+            if (nowSelectNum != maxSelectNum) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
 
+            nowSelectNum++;
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            Vector2 arrowPosi = uiControl.genreSelectArrowRect.localPosition;
-
-            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
-
-            uiControl.genreSelectArrowRect.localPosition = arrowPosi;
+            UpdateArrowPosition();
         }
 
         private void ConfirmAction(InputAction.CallbackContext context) //確定
         {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuConfirm, false);
+
             //現在選択している種類の商品のスクロールビューを表示する
             MenuState select = (MenuState)nowSelectNum;
 
@@ -400,14 +392,14 @@ namespace CustomizeUI
                 case MenuState.Body:
 
                     uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomPartsType);
-                    uiControl.StateTranstion(CustomizeUIState.SelectBodyMenu);
+                    uiControl.StateTranstion(StateEnum.SelectBodyMenu);
 
                     break;
 
                 case MenuState.Weapon:
 
                     uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomPartsType);
-                    uiControl.StateTranstion(CustomizeUIState.SelectWeaponMenu);
+                    uiControl.StateTranstion(StateEnum.SelectWeaponMenu);
 
                     break;
             }
@@ -415,10 +407,22 @@ namespace CustomizeUI
 
         public void CanselAction(InputAction.CallbackContext context)
         {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuCancel, false);
+
             uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.Terminal, DockImageTransition.MenuType.CustomGenre);
-            uiControl.StateTranstion(CustomizeUIState.Wait);
-            uiControl.mainMenuControl.StateTranstion(MainMenuState.MainMenuStateEnum.SelectMenu);
+            uiControl.StateTranstion(StateEnum.Wait);
+            uiControl.mainMenuControl.StateTranstion(MainMenuUIState.MainMenuState.MainMenuStateEnum.SelectMenu);
         }
+
+        private void UpdateArrowPosition()
+        {
+            Vector2 arrowPosi = uiControl.genreSelectArrowRect.localPosition;
+
+            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
+
+            uiControl.genreSelectArrowRect.localPosition = arrowPosi;
+        }
+
     }
 
     class SelectBodyMenuState : CustomizeControlState
@@ -431,7 +435,7 @@ namespace CustomizeUI
         //コンストラクタ　初期化
         public SelectBodyMenuState(CustomizeUIController controller)
         {
-            state = CustomizeUIState.SelectBodyMenu;
+            state = StateEnum.SelectBodyMenu;
 
             uiControl = controller;
 
@@ -497,22 +501,28 @@ namespace CustomizeUI
 
         public void UpArrowAction(InputAction.CallbackContext context)
         {
+            if (nowSelectNum != 0) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+
             nowSelectNum--;
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            ChangeArrowPosition();
+            UpdateArrowPosition();
         }
 
         public void DownArrowAction(InputAction.CallbackContext context)
         {
+            if (nowSelectNum != maxSelectNum) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+
             nowSelectNum++;
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
-            ChangeArrowPosition();
+            UpdateArrowPosition();
         }
 
         private void ConfirmAction(InputAction.CallbackContext context) //確定
         {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuConfirm, false);
+
             //現在選択している種類の商品のスクロールビューを表示する
             BodyPartsData.PartsType select = (BodyPartsData.PartsType)nowSelectNum;
 
@@ -521,11 +531,13 @@ namespace CustomizeUI
 
         public void CanselAction(InputAction.CallbackContext context)
         {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuCancel, false);
+
             uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomPartsType);
-            uiControl.StateTranstion(CustomizeUIState.SelectMenu);
+            uiControl.StateTranstion(StateEnum.SelectMenu);
         }
 
-        private void ChangeArrowPosition()
+        private void UpdateArrowPosition()
         {
             Vector2 arrowPosi = uiControl.typeSelectArrowRect.localPosition;
 
@@ -563,7 +575,7 @@ namespace CustomizeUI
 
             //状態遷移
             uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomPartsType, DockImageTransition.MenuType.CustomSelectParts);
-            uiControl.StateTranstion(CustomizeUIState.OpenedScrollView);
+            uiControl.StateTranstion(StateEnum.OpenedScrollView);
         }
     }
 
@@ -577,7 +589,7 @@ namespace CustomizeUI
         //コンストラクタ　初期化
         public SelectWeaponMenuState(CustomizeUIController controller)
         {
-            state = CustomizeUIState.SelectWeaponMenu;
+            state = StateEnum.SelectWeaponMenu;
 
             uiControl = controller;
 
@@ -653,6 +665,8 @@ namespace CustomizeUI
 
         public void UpArrowAction(InputAction.CallbackContext context)
         {
+            if (nowSelectNum != 0) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+
             nowSelectNum--;
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
@@ -661,6 +675,8 @@ namespace CustomizeUI
 
         public void DownArrowAction(InputAction.CallbackContext context)
         {
+            if (nowSelectNum != maxSelectNum) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+
             nowSelectNum++;
             nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
 
@@ -678,6 +694,8 @@ namespace CustomizeUI
 
         private void ConfirmAction(InputAction.CallbackContext context) //確定
         {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuConfirm, false);
+
             //現在選択している種類の商品のスクロールビューを表示する
             WeaponPartsData.SetType type = WeaponPartsData.SetType.Arm;
             LegacySettingData.WeaponSetPosi selectPosi = (LegacySettingData.WeaponSetPosi)nowSelectNum;
@@ -689,8 +707,10 @@ namespace CustomizeUI
 
         public void CanselAction(InputAction.CallbackContext context)
         {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuCancel, false);
+
             uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.CustomGenre, DockImageTransition.MenuType.CustomPartsType);
-            uiControl.StateTranstion(CustomizeUIState.SelectMenu);
+            uiControl.StateTranstion(StateEnum.SelectMenu);
         }
 
         private void OpenWeaponSelectScroll(WeaponPartsData.SetType type, LegacySettingData.WeaponSetPosi setPosi)
@@ -707,17 +727,17 @@ namespace CustomizeUI
 
             //状態遷移
             uiControl.transitionManager.TransitionToRight(DockImageTransition.MenuType.CustomPartsType, DockImageTransition.MenuType.CustomSelectParts);
-            uiControl.StateTranstion(CustomizeUIState.OpenedScrollView);
+            uiControl.StateTranstion(StateEnum.OpenedScrollView);
         }
     }
 
     //スクロールビューでの選択待ちステート
-    public class OpenedScrollViewState : CustomizeControlState
+    class OpenedScrollViewState : CustomizeControlState
     {
         //コンストラクタ　初期化
         public OpenedScrollViewState(CustomizeUIController controller)
         {
-            state = CustomizeUIState.OpenedScrollView;
+            state = StateEnum.OpenedScrollView;
 
             uiControl = controller;
         }
@@ -771,13 +791,15 @@ namespace CustomizeUI
 
         public void CanselAction(InputAction.CallbackContext context)
         {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuCancel, false);
+
             //オートセーブする
             SaveDataManager.instance.SaveFileWriteAsync();
 
             //アウトラインを非表示に
             uiControl.robotControl.SetAllOutlines(false);
 
-            if (uiControl.beforeState.state == CustomizeUIState.SelectBodyMenu)
+            if (uiControl.beforeState.state == StateEnum.SelectBodyMenu)
             {
                 uiControl.statusUI.ChangeCustomize();
                 uiControl.StatusUIDataReflesh();

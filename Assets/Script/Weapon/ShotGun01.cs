@@ -97,6 +97,8 @@ public class ShotGun01 : WeaponBase
         //ŽËŒ‚‰Â”\ŠÔŠu‚ð‘Ò‚Â
         isIntervalWait = true;
 
+        AudioManager.instance.PlayAudio(weaponAudioData, false,transform.position);
+
         leftBulletNum--;
         leftBulletNum = Mathf.Clamp(leftBulletNum, 0, maxBulletNum);
 

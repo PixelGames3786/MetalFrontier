@@ -80,6 +80,8 @@ public class Pistol01 : WeaponBase
 
         bullet.Shot(shotVector);
 
+        AudioManager.instance.PlayAudio(weaponAudioData, false, transform.position);
+
         //ŽËŒ‚‰Â”\ŠÔŠu‚ð‘Ò‚Â
         isIntervalWait = true;
 

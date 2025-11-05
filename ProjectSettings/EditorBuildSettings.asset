@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GiantScene.unity
     guid: 48903c6325e780948a6c7e87cc809bc1
+  - enabled: 1
+    path: Assets/Scenes/TutorialScene.unity
+    guid: 90bb5a316ff7a244d81e576a2673093a
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 0111018488d80ac4dbfa035bf2285f12,
       type: 2}

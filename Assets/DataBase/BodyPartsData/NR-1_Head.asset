@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ItemNumber: 301
   itemType: 0
-  price: 0
+  price: 150
   itemName: "NR-1 \u982D\u90E8"
-  Description: "\u306A\u3057"
+  Description: "\u6C4E\u7528\u6027\u306E\u9AD8\u3044\u6A19\u6E96\u578B\u6A5F\u4F53\u3002\u30D0\u30E9\u30F3\u30B9\u304C\u826F\u304F\u3001\u521D\u5FC3\u8005\u306B\u3082\u6271\u3044\u3084\u3059\u3044\u8A2D\u8A08\u3002"
+  itemIcon: {fileID: 21300000, guid: 346e3d3fd93629b45a376eec52977579, type: 3}
   Type: 0
   maxModuleSlot: 0
   minModuleSlot: 0
@@ -24,6 +25,11 @@ MonoBehaviour:
     _list:
     - key: Head_Mesh
       value: {fileID: -865412199123941540, guid: d5f887334a575b944a97394dd2560e69,
+        type: 3}
+  ObjnameTrailPairs:
+    _list:
+    - key: Head_Mesh
+      value: {fileID: 5698014512516270073, guid: bfdcd30e56ca69f45919778de4edebf1,
         type: 3}
   hpFactor: 100
   moveSpeed: 0

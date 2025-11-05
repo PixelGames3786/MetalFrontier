@@ -17,6 +17,7 @@ MonoBehaviour:
   price: 0
   itemName: "SK-AR4500 \u5DE6\u8155\u90E8"
   Description: "\u306A\u3057"
+  itemIcon: {fileID: 21300000, guid: 82957640e8494524a8cc4eb500683e75, type: 3}
   Type: 3
   maxModuleSlot: 0
   minModuleSlot: 0

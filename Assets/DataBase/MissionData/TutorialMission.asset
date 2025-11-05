@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21cdc4bd7d1c6eb49967019b74514425, type: 3}
+  m_Name: TutorialMission
+  m_EditorClassIdentifier: 
+  missionNumber: 1
+  missionName: Tutorial
+  description: "\u6A5F\u4F53\u306E\u64CD\u4F5C\u3092\u78BA\u8A8D\u3057\u307E\u3059\u3002"
+  target: "\u30FB\u64CD\u4F5C\u65B9\u6CD5\u3092\u7FD2\u5F97\u3059\u308B"
+  sceneName: TutorialScene
+  clearGetCol: 0
+  clearGetItems: []
+  clearOpenMission:
+  - {fileID: 11400000, guid: 71bc95631203e5844ba5743631f35b1c, type: 2}

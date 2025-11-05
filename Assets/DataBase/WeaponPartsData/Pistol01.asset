@@ -17,6 +17,7 @@ MonoBehaviour:
   price: 100
   itemName: "\u30D4\u30B9\u30C8\u30EB01"
   Description: "\u30B3\u30F3\u30D1\u30AF\u30C8\u306A\u8A2D\u8A08\u3067\u8FD1\u8DDD\u96E2\u304B\u3089\u4E2D\u8DDD\u96E2\u307E\u3067\u5B89\u5B9A\u3057\u305F\u5A01\u529B\u3092\u767A\u63EE\u3059\u308B\u3002\u521D\u5FC3\u8005\u5411\u3051\u306E\u6B66\u5668\u3002"
+  itemIcon: {fileID: 21300000, guid: ef6f24d2cf2e99b42835a42886bf12f4, type: 3}
   setType: 1
   weaponType: 0
   attackType: 0

@@ -122,8 +122,6 @@ public class MissileBullet : MonoBehaviour,IDamageable,ITargetable
         Transform colTrans = collision.collider.transform;
         IDamageable damageAble = colTrans.GetComponent<IDamageable>();
 
-        print(colTrans.name);
-
         if (damageAble == null)
         {
             cts.Cancel();

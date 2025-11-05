@@ -73,6 +73,8 @@ public class ShoulderMissile01 : WeaponBase
 
             onLeftBulletChange?.Invoke(weaponPosition);
 
+            AudioManager.instance.PlayAudio(weaponAudioData, false, transform.position);
+
             await UniTask.Delay(200);
         }
 

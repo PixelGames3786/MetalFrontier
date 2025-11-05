@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ItemNumber: 308
   itemType: 0
-  price: 0
+  price: 150
   itemName: "SD-1 \u5DE6\u8155\u90E8"
-  Description: "\u306A\u3057"
+  Description: "\u6A5F\u52D5\u529B\u3092\u8A87\u308B\u9AD8\u901F\u578B\u6A5F\u4F53\u3002\u7D20\u65E9\u3044\u56DE\u907F\u3084\u6226\u5834\u79FB\u52D5\u306B\u7279\u5316\u3002"
+  itemIcon: {fileID: 21300000, guid: 82957640e8494524a8cc4eb500683e75, type: 3}
   Type: 2
   maxModuleSlot: 0
   minModuleSlot: 0

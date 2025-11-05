@@ -12,7 +12,7 @@ public class MissionDataBase : ScriptableObject
     //アイテム番号からアイテムを取得
     public MissionData GetMission(int missionNum)
     {
-        return missionDataList.FirstOrDefault(mission => mission.missionNumber == missionNum);
+        return missionDataList.First(mission => mission.missionNumber == missionNum);
     }
 
     //アイテム番号のリストからアイテムのリストに変換

@@ -26,6 +26,7 @@ public class DataBaseController : MonoBehaviour
     //‹^Ž—ƒVƒ“ƒOƒ‹ƒgƒ“
     public void Awake()
     {
+
     }
 
     // Start is called before the first frame update

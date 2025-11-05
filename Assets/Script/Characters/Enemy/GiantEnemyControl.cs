@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.InputSystem.XR;
 using GiantEnemy;
 using System;
-using UnityEditor.ShaderGraph;
 using Cysharp.Threading.Tasks;
 
 public class GiantEnemyControl : UnitBase
@@ -22,7 +21,8 @@ public class GiantEnemyControl : UnitBase
     public float moveSpeed,dashSpeed,targetMinDistance,shotChargeTime,physicalRes,beamRes;
     public string enemyTag;
 
-    public bool isDied,isAttack,isWorking;
+    //[NonSerialized]
+    public bool isDied,isAttack,isWorking,isMoving;
 
     public Transform leftMissileParent, RightMissileParent;
     public MissileBullet missilePrefab;
@@ -192,6 +192,13 @@ public class GiantEnemyControl : UnitBase
         isWorking = false;
     }
 
+    public void SetMoving(bool value)
+    {
+        isMoving= value;
+
+        if(!isMoving) rb.velocity= Vector3.zero;
+    }
+
     public void LeftKneel() //左ひざをつく
     {
         animator.SetTrigger("leftKneelTrigger");
@@ -254,6 +261,8 @@ namespace GiantEnemy
 
         public override void OnUpdate()
         {
+            if (!controller.isMoving) return;
+
             //目標位置にたどり着いたら次の位置に移動する
             if (CheckDistance(controller.transform.position,targetTrans.position)<1f)
             {
@@ -262,6 +271,7 @@ namespace GiantEnemy
             }
             else
             {
+                //移動する
                 moveDir = CheckVector(targetTrans.position,controller.transform.position)*controller.moveSpeed;
                 controller.rb.velocity = new Vector3(moveDir.x,controller.rb.velocity.y,moveDir.z);
             }
@@ -367,6 +377,8 @@ namespace GiantEnemy
             }
             else
             {
+                if (!controller.isMoving) return;
+
                 //一定距離以上離れていたら近づく
                 moveDir = CheckVector(targetTrans.position, thisTrans.position) * controller.moveSpeed;
                 controller.rb.velocity = new Vector3(moveDir.x, controller.rb.velocity.y, moveDir.z);
@@ -382,10 +394,6 @@ namespace GiantEnemy
 
             controller.animator.SetBool("isFrontMove", false);
             controller.rb.velocity = Vector3.zero;
-
-            controller.StateTranstion(StateEnum.DownSwordSlash);
-            return;
-
 
             if (dis<30) //近接ならば
             {
@@ -945,17 +953,15 @@ namespace GiantEnemy
 
         public void CallFunc(string FuncName)
         {
+            if (!actionDic.ContainsKey(FuncName))
+            {
+                Debug.Log($"{stateEnum.ToString()}には{FuncName}関数がありません！");
+                return;
+            }
+
             Action action = actionDic[FuncName];
 
-            if (action != null)
-            {
-                Debug.Log(FuncName);
-                action.Invoke();
-            }
-            else
-            {
-                throw new System.Exception("呼ぶ関数がないぜ！");
-            }
+            action.Invoke();
         }
 
         public void CallFuncArg(string FuncName, object[] args)

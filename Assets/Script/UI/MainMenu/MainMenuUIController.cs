@@ -6,190 +6,11 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using DG.Tweening;
 using TMPro;
-using CustomizeUI;
 using MenuType = DockImageTransition.MenuType;
+using MainMenuUIState;
 
 public class MainMenuUIController : MonoBehaviour
 {
-    class WaitLoadState : MainMenuState
-    {
-        //コンストラクタ　初期化
-        public WaitLoadState(MainMenuUIController controller) : base(controller)
-        {
-            state = MainMenuStateEnum.WaitLoad;
-        }
-
-        public override void OnEnter()
-        {
-            //もしもセーブデータのロードが済んでいるのなら
-            if (SaveDataManager.instance.isLoadComplete)
-            {
-                CurtainShowUp();
-            }
-            else
-            {
-                //終わるまで待つ
-                SaveDataManager.instance.onLoadComplete += CurtainShowUp;
-            }
-        }
-
-        public override void OnExit()
-        {
-            SaveDataManager.instance.onLoadComplete -= CurtainShowUp;
-        }
-
-        //セーブデータのロードが完了した際に、画面を隠している幕を上げる
-        private void CurtainShowUp()
-        {
-            uiController.curtainCanvas.DOFade(0f, 0.5f).OnComplete(() =>
-            {
-                uiController.curtainCanvas.gameObject.SetActive(false);
-                uiController.StateTranstion(MainMenuStateEnum.SelectMenu);
-            });
-        }
-    }
-
-    class WaitState : MainMenuState
-    {
-        //コンストラクタ　初期化
-        public WaitState(MainMenuUIController controller) : base(controller)
-        {
-            state = MainMenuStateEnum.Wait;
-        }
-
-        public override void OnEnter()
-        {
-            
-        }
-
-        public override void OnExit()
-        {
-            uiController.thisCanvas.DOFade(1f, 0.3f);
-
-            for (int i = 0; i < uiController.selectTextRects.Count; i++)
-            {
-                uiController.selectTextRects[i].localPosition = new Vector2(-700f, uiController.selectTextRects[i].localPosition.y);
-                uiController.selectTextRects[i].DOLocalMoveX(-813f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
-                uiController.selectTextRects[i].GetComponent<TextMeshProUGUI>().DOFade(1f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
-            }
-        }
-
-    }
-
-    class SelectMenuState : MainMenuState
-    {
-        enum MenuState
-        {
-            Mission,
-            Customize,
-            Shop,
-        }
-
-        private float arrowDefaultYPosi;
-
-        private int nowSelectNum = 0;
-        private int maxSelectNum = 2;
-
-        private MenuState transitState;
-
-        //コンストラクタ　初期化
-        public SelectMenuState(MainMenuUIController controller) : base(controller)
-        {
-            state = MainMenuStateEnum.SelectMenu;
-
-            uiController = controller;
-
-            arrowDefaultYPosi = uiController.selectArrowRect.localPosition.y;
-        }
-
-        public override void OnEnter()
-        {
-            uiController.upArrowAct.performed += UpArrowAction;
-            uiController.downArrowAct.performed += DownArrowAction;
-            uiController.confirmAct.performed += ConfirmAction;
-        }
-
-        public override void OnExit()
-        {
-            uiController.upArrowAct.performed -= UpArrowAction;
-            uiController.downArrowAct.performed -= DownArrowAction;
-            uiController.confirmAct.performed -= ConfirmAction;
-
-            switch (transitState)
-            {
-                case MenuState.Mission:
-
-                    uiController.transitionManager.TransitionToRight(MenuType.Terminal, MenuType.Mission);
-                    uiController.missionUIControl.StateTranstion(MissionSelectState.MissionSelectStateEnum.SelectMission);
-
-                    break;
-
-                case MenuState.Customize:
-
-                    uiController.transitionManager.TransitionToRight(MenuType.Terminal, MenuType.CustomGenre);
-                    uiController.customizeUIControl.StateTranstion(CustomizeControlState.CustomizeUIState.SelectMenu);
-
-                    break;
-
-                case MenuState.Shop:
-
-                    uiController.transitionManager.TransitionToRight(MenuType.Terminal, MenuType.Shop);
-                    uiController.shopUIControl.StateTranstion(ShopControllerState.ShopState.SelectGenre);
-
-                    break;
-            }
-
-            /*
-            uiController.thisCanvas.DOFade(0f, 0.3f).OnComplete(() => 
-            {
-                
-            });
-
-            /*
-
-            for (int i = 0; i < uiController.selectTextRects.Count; i++)
-            {
-                uiController.selectTextRects[i].localPosition = new Vector2(-813f, uiController.selectTextRects[i].localPosition.y);
-                uiController.selectTextRects[i].DOLocalMoveX(-900f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
-                uiController.selectTextRects[i].GetComponent<TextMeshProUGUI>().DOFade(0f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
-            }
-            */
-        }
-
-        public void UpArrowAction(InputAction.CallbackContext context)
-        {
-            nowSelectNum--;
-
-            nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
-
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
-
-            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
-
-            uiController.selectArrowRect.localPosition = arrowPosi;
-        }
-
-        public void DownArrowAction(InputAction.CallbackContext context)
-        {
-            nowSelectNum++;
-
-            nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
-
-            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
-
-            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
-
-            uiController.selectArrowRect.localPosition = arrowPosi;
-        }
-
-        private void ConfirmAction(InputAction.CallbackContext context) //確定
-        {
-            transitState = (MenuState)nowSelectNum;
-
-            uiController.StateTranstion(MainMenuStateEnum.Wait);
-        }
-    }
-
     private List<MainMenuState> States = new List<MainMenuState>();
 
     private MainMenuState nowState;
@@ -273,65 +94,252 @@ public class MainMenuUIController : MonoBehaviour
 
 }
 
-
-//基底ステートの定義
-public abstract class MainMenuState : IState
+namespace MainMenuUIState
 {
-    public enum MainMenuStateEnum
+    class WaitLoadState : MainMenuState
     {
-        WaitLoad, //初期状態　セーブマネージャーのロードを待つ
-        Wait,
-        SelectMenu,
-    }
-
-    public MainMenuStateEnum state;
-
-    protected MainMenuUIController uiController;
-
-    //呼べる関数をまとめるDictionary
-    protected Dictionary<string, Action> actionDic;
-
-    //引数ありの関数をまとめるよ
-    protected Dictionary<string, Action<object[]>> actionDicWithArg;
-
-    //コンストラクタ　初期化
-    public MainMenuState(MainMenuUIController controller)
-    {
-        uiController = controller;
-    }
-
-    public void CallFunc(string FuncName)
-    {
-        Action action = actionDic[FuncName];
-
-        if (action != null)
+        //コンストラクタ　初期化
+        public WaitLoadState(MainMenuUIController controller) : base(controller)
         {
-            action.Invoke();
+            state = MainMenuStateEnum.WaitLoad;
         }
-        else
-        {
-            throw new System.Exception("呼ぶ関数がないぜ！");
-        }
-    }
 
-    public void CallFuncArg(string FuncName, object[] args)
-    {
-        Action<object[]> action = actionDicWithArg[FuncName];
-
-        if (action != null)
+        public override void OnEnter()
         {
-            action.Invoke(args);
+            //もしもセーブデータのロードが済んでいるのなら
+            if (SaveDataManager.instance.isLoadComplete)
+            {
+                CurtainShowUp();
+            }
+            else
+            {
+                //終わるまで待つ
+                SaveDataManager.instance.onLoadComplete += CurtainShowUp;
+            }
         }
-        else
+
+        public override void OnExit()
         {
-            throw new System.Exception("呼ぶ関数がないぜ！");
+            SaveDataManager.instance.onLoadComplete -= CurtainShowUp;
+        }
+
+        //セーブデータのロードが完了した際に、画面を隠している幕を上げる
+        private void CurtainShowUp()
+        {
+            uiController.curtainCanvas.DOFade(0f, 0.5f).OnComplete(() =>
+            {
+                uiController.curtainCanvas.gameObject.SetActive(false);
+                uiController.StateTranstion(MainMenuStateEnum.SelectMenu);
+                AudioManager.instance.PlayBGM(AudioData.audioNameEnum.DockBGM);
+            });
         }
     }
 
+    class WaitState : MainMenuState
+    {
+        //コンストラクタ　初期化
+        public WaitState(MainMenuUIController controller) : base(controller)
+        {
+            state = MainMenuStateEnum.Wait;
+        }
 
-    public virtual void OnEnter() { }
+        public override void OnEnter()
+        {
 
-    public virtual void OnExit(){ }
+        }
 
-    public virtual void OnUpdate() { }
+        public override void OnExit()
+        {
+            uiController.thisCanvas.DOFade(1f, 0.3f);
+
+            for (int i = 0; i < uiController.selectTextRects.Count; i++)
+            {
+                uiController.selectTextRects[i].localPosition = new Vector2(-700f, uiController.selectTextRects[i].localPosition.y);
+                uiController.selectTextRects[i].DOLocalMoveX(-813f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
+                uiController.selectTextRects[i].GetComponent<TextMeshProUGUI>().DOFade(1f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
+            }
+        }
+
+    }
+
+    class SelectMenuState : MainMenuState
+    {
+        enum MenuState
+        {
+            Mission,
+            Customize,
+            Shop,
+        }
+
+        private float arrowDefaultYPosi;
+
+        private int nowSelectNum = 0;
+        private int maxSelectNum = 2;
+
+        private MenuState transitState;
+
+        //コンストラクタ　初期化
+        public SelectMenuState(MainMenuUIController controller) : base(controller)
+        {
+            state = MainMenuStateEnum.SelectMenu;
+
+            uiController = controller;
+
+            arrowDefaultYPosi = uiController.selectArrowRect.localPosition.y;
+        }
+
+        public override void OnEnter()
+        {
+            uiController.upArrowAct.performed += UpArrowAction;
+            uiController.downArrowAct.performed += DownArrowAction;
+            uiController.confirmAct.performed += ConfirmAction;
+        }
+
+        public override void OnExit()
+        {
+            uiController.upArrowAct.performed -= UpArrowAction;
+            uiController.downArrowAct.performed -= DownArrowAction;
+            uiController.confirmAct.performed -= ConfirmAction;
+
+            //転換
+            switch (transitState)
+            {
+                case MenuState.Mission:
+
+                    uiController.transitionManager.TransitionToRight(MenuType.Terminal, MenuType.Mission);
+                    uiController.missionUIControl.StateTranstion(MissionSelectState.MissionSelectBaseState.StateEnum.SelectMission);
+
+                    break;
+
+                case MenuState.Customize:
+
+                    uiController.transitionManager.TransitionToRight(MenuType.Terminal, MenuType.CustomGenre);
+                    uiController.customizeUIControl.StateTranstion(CustomizeUIState.CustomizeControlState.StateEnum.SelectMenu);
+
+                    break;
+
+                case MenuState.Shop:
+
+                    uiController.transitionManager.TransitionToRight(MenuType.Terminal, MenuType.Shop);
+                    uiController.shopUIControl.StateTranstion(ShopUIState.ShopControllerState.ShopState.SelectGenre);
+
+                    break;
+            }
+
+            /*
+            uiController.thisCanvas.DOFade(0f, 0.3f).OnComplete(() => 
+            {
+                
+            });
+
+            /*
+
+            for (int i = 0; i < uiController.selectTextRects.Count; i++)
+            {
+                uiController.selectTextRects[i].localPosition = new Vector2(-813f, uiController.selectTextRects[i].localPosition.y);
+                uiController.selectTextRects[i].DOLocalMoveX(-900f, 0.3f).SetDelay(i * 0.1f); //時間差で左に移動するように
+                uiController.selectTextRects[i].GetComponent<TextMeshProUGUI>().DOFade(0f, 0.3f).SetDelay(i * 0.1f); //時間差でフェード
+            }
+            */
+        }
+
+        public void UpArrowAction(InputAction.CallbackContext context)
+        {
+            if(nowSelectNum!=0)AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+
+            nowSelectNum--;
+            nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
+
+            UpdateArrowPosition();
+        }
+
+        public void DownArrowAction(InputAction.CallbackContext context)
+        {
+            if (nowSelectNum != maxSelectNum) AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+
+            nowSelectNum++;
+            nowSelectNum = Mathf.Clamp(nowSelectNum, 0, maxSelectNum);
+
+            UpdateArrowPosition();
+        }
+
+        private void ConfirmAction(InputAction.CallbackContext context) //確定
+        {
+            transitState = (MenuState)nowSelectNum;
+
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuConfirm, false);
+
+            uiController.StateTranstion(MainMenuStateEnum.Wait);
+        }
+
+        private void UpdateArrowPosition()
+        {
+            Vector2 arrowPosi = uiController.selectArrowRect.localPosition;
+
+            arrowPosi.y = arrowDefaultYPosi - (nowSelectNum * 70);
+
+            uiController.selectArrowRect.localPosition = arrowPosi;
+        }
+    }
+    //基底ステートの定義
+    public abstract class MainMenuState : IState
+    {
+        public enum MainMenuStateEnum
+        {
+            WaitLoad, //初期状態　セーブマネージャーのロードを待つ
+            Wait,
+            SelectMenu,
+        }
+
+        public MainMenuStateEnum state;
+
+        protected MainMenuUIController uiController;
+
+        //呼べる関数をまとめるDictionary
+        protected Dictionary<string, Action> actionDic;
+
+        //引数ありの関数をまとめるよ
+        protected Dictionary<string, Action<object[]>> actionDicWithArg;
+
+        //コンストラクタ　初期化
+        public MainMenuState(MainMenuUIController controller)
+        {
+            uiController = controller;
+        }
+
+        public void CallFunc(string FuncName)
+        {
+            Action action = actionDic[FuncName];
+
+            if (action != null)
+            {
+                action.Invoke();
+            }
+            else
+            {
+                throw new System.Exception("呼ぶ関数がないぜ！");
+            }
+        }
+
+        public void CallFuncArg(string FuncName, object[] args)
+        {
+            Action<object[]> action = actionDicWithArg[FuncName];
+
+            if (action != null)
+            {
+                action.Invoke(args);
+            }
+            else
+            {
+                throw new System.Exception("呼ぶ関数がないぜ！");
+            }
+        }
+
+
+        public virtual void OnEnter() { }
+
+        public virtual void OnExit() { }
+
+        public virtual void OnUpdate() { }
+    }
 }

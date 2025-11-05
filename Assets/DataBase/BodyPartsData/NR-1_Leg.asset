@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ItemNumber: 305
   itemType: 0
-  price: 0
+  price: 150
   itemName: "NR-1 \u811A\u90E8"
-  Description: "\u306A\u3057"
+  Description: "\u6C4E\u7528\u6027\u306E\u9AD8\u3044\u6A19\u6E96\u578B\u6A5F\u4F53\u3002\u30D0\u30E9\u30F3\u30B9\u304C\u826F\u304F\u3001\u521D\u5FC3\u8005\u306B\u3082\u6271\u3044\u3084\u3059\u3044\u8A2D\u8A08\u3002"
+  itemIcon: {fileID: 21300000, guid: b4cf3d633d9d89541a666e70dcf7f1da, type: 3}
   Type: 4
   maxModuleSlot: 0
   minModuleSlot: 0

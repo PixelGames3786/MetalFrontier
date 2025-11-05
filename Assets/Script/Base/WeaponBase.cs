@@ -13,6 +13,8 @@ public abstract class WeaponBase : MonoBehaviour
     public float useInterval,intervalElapseTime;
     public int maxBulletNum, leftBulletNum; //最大使用回数 残り使用回数
 
+    public AudioData weaponAudioData; //効果音
+
     public LegacySpecStatus legacyStatus;
 
     public LegacySettingData.WeaponSetPosi weaponPosition;

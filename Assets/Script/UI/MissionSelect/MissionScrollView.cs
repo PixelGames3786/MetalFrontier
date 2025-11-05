@@ -20,7 +20,7 @@ public class MissionScrollView : MonoBehaviour
 
     public MissionSimpleInfo forcusInfo { get; private set; }
 
-    private List<MissionSimpleInfo> SimpleInfoList = new List<MissionSimpleInfo>();
+    private List<MissionSimpleInfo> simpleInfos = new List<MissionSimpleInfo>();
 
     [SerializeField]
     private MissionSelectUIController controller;
@@ -45,7 +45,7 @@ public class MissionScrollView : MonoBehaviour
     {
         //子供を全消ししてリセット
         content.DestroyAllChilds();
-        SimpleInfoList.Clear();
+        simpleInfos.Clear();
 
         for (int i = 0; i < displayMissions.Count; i++)
         {
@@ -54,10 +54,10 @@ public class MissionScrollView : MonoBehaviour
             info.scrollView = this;
             info.InitializeUI(displayMissions[i]);
 
-            SimpleInfoList.Add(info);
+            simpleInfos.Add(info);
         }
 
-        forcusInfo = SimpleInfoList[0];
+        forcusInfo = simpleInfos[0];
         forcusInfoNum = 0;
 
         forcusInfo.OnForcus();
@@ -66,11 +66,17 @@ public class MissionScrollView : MonoBehaviour
 
     public void ChangeForcus(int changeNum)
     {
+
         forcusInfoNum += changeNum;
 
-        forcusInfoNum = Mathf.Clamp(forcusInfoNum, 0, SimpleInfoList.Count - 1);
+        if (forcusInfoNum >= 0 && forcusInfoNum < simpleInfos.Count)
+        {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+        }
 
-        MissionSimpleInfo newForcus = SimpleInfoList[forcusInfoNum];
+        forcusInfoNum = Mathf.Clamp(forcusInfoNum, 0, simpleInfos.Count - 1);
+
+        MissionSimpleInfo newForcus = simpleInfos[forcusInfoNum];
 
         if (newForcus != forcusInfo)
         {

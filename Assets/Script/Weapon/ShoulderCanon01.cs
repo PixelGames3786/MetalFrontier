@@ -79,6 +79,8 @@ public class ShoulderCanon01 : WeaponBase
 
         bulletRb.AddForce(shotVector*weaponData.bulletSpeed, ForceMode.Impulse);
 
+        AudioManager.instance.PlayAudio(weaponAudioData, false, transform.position);
+
         //ŽËŒ‚‰Â”\ŠÔŠu‚ð‘Ò‚Â
         isIntervalWait = true;
 

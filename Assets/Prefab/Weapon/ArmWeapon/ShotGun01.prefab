@@ -50,6 +50,7 @@ MonoBehaviour:
   intervalElapseTime: 0
   maxBulletNum: 0
   leftBulletNum: 0
+  weaponAudioData: {fileID: 11400000, guid: 0c297d2f06d64ae4e89ad9157772d996, type: 2}
   legacyStatus:
     maxHP: 0
     moveSpeed: 0

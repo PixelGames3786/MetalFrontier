@@ -6,182 +6,13 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using DG.Tweening;
 using TMPro;
-using Cysharp.Threading.Tasks;
+using MissionSelectState;
 
 public class MissionSelectUIController : MonoBehaviour
 {
-    class WaitState : MissionSelectState
-    {
-        //コンストラクタ　初期化
-        public WaitState(MissionSelectUIController controller)
-        {
-            state = MissionSelectStateEnum.Wait;
+    private List<MissionSelectBaseState> States = new List<MissionSelectBaseState>();
 
-            uiControl = controller;
-        }
-    }
-
-    class SelectMissionState : MissionSelectState
-    {
-        //コンストラクタ　初期化
-        public SelectMissionState(MissionSelectUIController controller)
-        {
-            state = MissionSelectStateEnum.SelectMission;
-
-            uiControl = controller;
-
-            actionDic = new Dictionary<string, Action>()
-            {
-                {"CloseGoodsStatus",CloseMissionStatus }
-            };
-
-            actionDicWithArg = new Dictionary<string, Action<object[]>>()
-            {
-                {"InfoOnForcus", InfoOnForcus}
-            };
-        }
-
-        public override void OnEnter()
-        {
-            uiControl.missionScrollView.InitializeScrollView(SaveDataManager.instance.saveData.missionDataList);
-
-            if (uiControl.beforeState.state == MissionSelectStateEnum.Wait)
-            {
-                uiControl.transitionManager.onTransitionComplete += InputActionRegister;
-            }
-            else
-            {
-                InputActionRegister();
-            }
-        }
-
-        private void InputActionRegister()
-        {
-            uiControl.upArrowAct.performed += UpArrowAction;
-            uiControl.downArrowAct.performed += DownArrowAction;
-            uiControl.confirmAct.performed += ConfirmAction;
-            uiControl.cancelAct.performed += CanselAction;
-        }
-
-        public override void OnExit()
-        {
-            uiControl.transitionManager.onTransitionComplete -= InputActionRegister;
-
-            uiControl.upArrowAct.performed -= UpArrowAction;
-            uiControl.downArrowAct.performed -= DownArrowAction;
-            uiControl.confirmAct.performed -= ConfirmAction;
-            uiControl.cancelAct.performed-=CanselAction;
-        }
-
-        private void InfoOnForcus(object[] args)
-        {
-            MissionData missions = (MissionData)args[0];
-            OpenMissionStatus(missions);
-        }
-
-        private void OpenMissionStatus(MissionData selectMission)
-        {
-            uiControl.missionStatus.InitializeUI(selectMission);
-            uiControl.missionStatus.OpenWindow();
-        }
-
-        private void CloseMissionStatus()
-        {
-            uiControl.missionStatus.CloseWindow();
-        }
-
-        private void UpArrowAction(InputAction.CallbackContext context)
-        {
-            uiControl.missionScrollView.ChangeForcus(-1);
-        }
-
-        private void DownArrowAction(InputAction.CallbackContext context)
-        {
-            uiControl.missionScrollView.ChangeForcus(1);
-        }
-
-        private void ConfirmAction(InputAction.CallbackContext context) //確定
-        {
-            uiControl.StateTranstion(MissionSelectStateEnum.ConfirmCheck);
-        }
-
-        private void CanselAction(InputAction.CallbackContext context)
-        {
-            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.Terminal, DockImageTransition.MenuType.Mission);
-
-            FindObjectOfType<MainMenuUIController>().StateTranstion(MainMenuState.MainMenuStateEnum.SelectMenu);
-            uiControl.StateTranstion(MissionSelectStateEnum.Wait);
-        }
-    }
-
-    class ConfirmCheckState : MissionSelectState
-    {
-        //コンストラクタ　初期化
-        public ConfirmCheckState(MissionSelectUIController controller)
-        {
-            state = MissionSelectStateEnum.ConfirmCheck;
-
-            uiControl = controller;
-        }
-
-        public override void OnEnter()
-        {
-            uiControl.confirmCheck.InitializeMissionUI(uiControl.missionScrollView.forcusInfo.missionData);
-            uiControl.confirmCheck.OpenWindow();
-
-            uiControl.leftArrowAct.performed += LeftArrowAction;
-            uiControl.rightArrowAct.performed += RightArrowAction;
-            uiControl.confirmAct.performed += ConfirmAction;
-        }
-
-        public override void OnExit()
-        {
-            uiControl.leftArrowAct.performed -= LeftArrowAction;
-            uiControl.rightArrowAct.performed -= RightArrowAction;
-            uiControl.confirmAct.performed -= ConfirmAction;
-        }
-
-        private void LeftArrowAction(InputAction.CallbackContext context)
-        {
-            uiControl.confirmCheck.ChangeForcus(-1);
-        }
-
-        private void RightArrowAction(InputAction.CallbackContext context)
-        {
-            uiControl.confirmCheck.ChangeForcus(1);
-        }
-
-        private void ConfirmAction(InputAction.CallbackContext context)
-        {
-            //Yesを選択していたらミッションシーンに遷移
-            if (uiControl.confirmCheck.isConfirm)
-            {
-                SelectMission(uiControl.missionScrollView.forcusInfo.missionData.sceneName);
-            }
-            else
-            {
-                uiControl.confirmCheck.CloseWindow();
-                uiControl.StateTranstion(MissionSelectStateEnum.SelectMission);
-            }
-        }
-
-        public void SelectMission(string missionSceneName)
-        {
-            uiControl.curtainCanvas.gameObject.SetActive(true);
-            uiControl.curtainCanvas.DOFade(1f, 1f).OnComplete(() =>
-            {
-                uiControl.leftArrowAct.performed -= LeftArrowAction;
-                uiControl.rightArrowAct.performed -= RightArrowAction;
-                uiControl.confirmAct.performed -= ConfirmAction;
-
-                SceneChangeManager.instance.StartCoroutine("SceneTransition", missionSceneName);
-            });
-        }
-    }
-
-    private List<MissionSelectState> States = new List<MissionSelectState>();
-
-    private MissionSelectState nowState,beforeState;
+    public MissionSelectBaseState nowState,beforeState;
 
     public RectTransform selectArrowRect;
 
@@ -191,8 +22,7 @@ public class MissionSelectUIController : MonoBehaviour
 
     public CanvasGroup curtainCanvas;
 
-    [SerializeField]
-    private DockImageTransition transitionManager;
+    public DockImageTransition transitionManager;
 
     public InputAction upArrowAct, downArrowAct,leftArrowAct,rightArrowAct, confirmAct,cancelAct;
 
@@ -233,11 +63,11 @@ public class MissionSelectUIController : MonoBehaviour
 
 
     //ステートの切り替え
-    public void StateTranstion(MissionSelectState.MissionSelectStateEnum transitState)
+    public void StateTranstion(MissionSelectBaseState.StateEnum transitState)
     {
         nowState.OnExit();
 
-        MissionSelectState newState = States.First(state => state.state == transitState);
+        MissionSelectBaseState newState = States.First(state => state.state == transitState);
 
         //ヌルチェ
         if (newState == null) throw new System.Exception("遷移するステートがないらしいよ");
@@ -262,68 +92,245 @@ public class MissionSelectUIController : MonoBehaviour
 
 }
 
-
-//基底ステートの定義
-public abstract class MissionSelectState : IState
+namespace MissionSelectState
 {
-    public enum MissionSelectStateEnum
+    class WaitState : MissionSelectBaseState
     {
-        Wait,
-        SelectMission,
-        ConfirmCheck,
-    }
-
-    public MissionSelectStateEnum state;
-
-    protected MissionSelectUIController uiControl;
-
-    //呼べる関数をまとめるDictionary
-    protected Dictionary<string, Action> actionDic;
-
-    //引数ありの関数をまとめるDic
-    protected Dictionary<string, Action<object[]>> actionDicWithArg;
-
-    public void CallFunc(string FuncName)
-    {
-        Action action = actionDic[FuncName];
-
-        if (action != null)
+        //コンストラクタ　初期化
+        public WaitState(MissionSelectUIController controller)
         {
-            action.Invoke();
-        }
-        else
-        {
-            throw new System.Exception("呼ぶ関数がないぜ！");
+            state = StateEnum.Wait;
+
+            uiControl = controller;
         }
     }
 
-    public void CallFuncArg(string FuncName, object[] args)
+    class SelectMissionState : MissionSelectBaseState
     {
-        Action<object[]> action = actionDicWithArg[FuncName];
-
-        if (action != null)
+        //コンストラクタ　初期化
+        public SelectMissionState(MissionSelectUIController controller)
         {
-            action.Invoke(args);
+            state = StateEnum.SelectMission;
+
+            uiControl = controller;
+
+            actionDic = new Dictionary<string, Action>()
+            {
+                {"CloseGoodsStatus",CloseMissionStatus }
+            };
+
+            actionDicWithArg = new Dictionary<string, Action<object[]>>()
+            {
+                {"InfoOnForcus", InfoOnForcus}
+            };
         }
-        else
+
+        public override void OnEnter()
         {
-            throw new System.Exception("呼ぶ関数がないぜ！");
+            uiControl.missionScrollView.InitializeScrollView(SaveDataManager.instance.saveData.missionDataList);
+
+            if (uiControl.beforeState.state == StateEnum.Wait)
+            {
+                uiControl.transitionManager.onTransitionComplete += InputActionRegister;
+            }
+            else
+            {
+                InputActionRegister();
+            }
+        }
+
+        private void InputActionRegister()
+        {
+            uiControl.upArrowAct.performed += UpArrowAction;
+            uiControl.downArrowAct.performed += DownArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
+            uiControl.cancelAct.performed += CanselAction;
+        }
+
+        public override void OnExit()
+        {
+            uiControl.transitionManager.onTransitionComplete -= InputActionRegister;
+
+            uiControl.upArrowAct.performed -= UpArrowAction;
+            uiControl.downArrowAct.performed -= DownArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
+            uiControl.cancelAct.performed -= CanselAction;
+        }
+
+        private void InfoOnForcus(object[] args)
+        {
+            MissionData missions = (MissionData)args[0];
+            OpenMissionStatus(missions);
+        }
+
+        private void OpenMissionStatus(MissionData selectMission)
+        {
+            uiControl.missionStatus.InitializeUI(selectMission);
+            uiControl.missionStatus.OpenWindow();
+        }
+
+        private void CloseMissionStatus()
+        {
+            uiControl.missionStatus.CloseWindow();
+        }
+
+        private void UpArrowAction(InputAction.CallbackContext context)
+        {
+            uiControl.missionScrollView.ChangeForcus(-1);
+        }
+
+        private void DownArrowAction(InputAction.CallbackContext context)
+        {
+            uiControl.missionScrollView.ChangeForcus(1);
+        }
+
+        private void ConfirmAction(InputAction.CallbackContext context) //確定
+        {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuConfirm, false);
+            uiControl.StateTranstion(StateEnum.ConfirmCheck);
+        }
+
+        private void CanselAction(InputAction.CallbackContext context)
+        {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuCancel, false);
+
+            uiControl.transitionManager.TransitionToLeft(DockImageTransition.MenuType.Terminal, DockImageTransition.MenuType.Mission);
+
+            GameObject.FindObjectOfType<MainMenuUIController>().StateTranstion(MainMenuUIState.MainMenuState.MainMenuStateEnum.SelectMenu);
+            uiControl.StateTranstion(StateEnum.Wait);
         }
     }
 
-
-    public virtual void OnEnter()
+    class ConfirmCheckState : MissionSelectBaseState
     {
+        //コンストラクタ　初期化
+        public ConfirmCheckState(MissionSelectUIController controller)
+        {
+            state = StateEnum.ConfirmCheck;
 
+            uiControl = controller;
+        }
+
+        public override void OnEnter()
+        {
+            uiControl.confirmCheck.InitializeMissionUI(uiControl.missionScrollView.forcusInfo.missionData);
+            uiControl.confirmCheck.OpenWindow();
+
+            uiControl.leftArrowAct.performed += LeftArrowAction;
+            uiControl.rightArrowAct.performed += RightArrowAction;
+            uiControl.confirmAct.performed += ConfirmAction;
+        }
+
+        public override void OnExit()
+        {
+            uiControl.leftArrowAct.performed -= LeftArrowAction;
+            uiControl.rightArrowAct.performed -= RightArrowAction;
+            uiControl.confirmAct.performed -= ConfirmAction;
+        }
+
+        private void LeftArrowAction(InputAction.CallbackContext context)
+        {
+            uiControl.confirmCheck.ChangeForcus(-1);
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+        }
+
+        private void RightArrowAction(InputAction.CallbackContext context)
+        {
+            uiControl.confirmCheck.ChangeForcus(1);
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+        }
+
+        private void ConfirmAction(InputAction.CallbackContext context)
+        {
+            //Yesを選択していたらミッションシーンに遷移
+            if (uiControl.confirmCheck.isConfirm)
+            {
+                AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuConfirm, false);
+                SelectMission(uiControl.missionScrollView.forcusInfo.missionData.sceneName);
+            }
+            else
+            {
+                AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuCancel, false);
+
+                uiControl.confirmCheck.CloseWindow();
+                uiControl.StateTranstion(StateEnum.SelectMission);
+            }
+        }
+
+        public void SelectMission(string missionSceneName)
+        {
+            AudioManager.instance.StopBGM(AudioData.audioNameEnum.DockBGM,true);
+
+            uiControl.curtainCanvas.gameObject.SetActive(true);
+            uiControl.curtainCanvas.DOFade(1f, 1f).OnComplete(() =>
+            {
+                OnExit(); //InputAction解除
+                SceneChangeManager.instance.StartCoroutine("SceneTransition", missionSceneName);
+            });
+        }
     }
 
-    public virtual void OnExit()
+    //基底ステートの定義
+    public abstract class MissionSelectBaseState : IState
     {
+        public enum StateEnum
+        {
+            Wait,
+            SelectMission,
+            ConfirmCheck,
+        }
 
-    }
+        public StateEnum state;
 
-    public virtual void OnUpdate()
-    {
+        protected MissionSelectUIController uiControl;
 
+        //呼べる関数をまとめるDictionary
+        protected Dictionary<string, Action> actionDic;
+
+        //引数ありの関数をまとめるDic
+        protected Dictionary<string, Action<object[]>> actionDicWithArg;
+
+        public void CallFunc(string FuncName)
+        {
+            Action action = actionDic[FuncName];
+
+            if (action != null)
+            {
+                action.Invoke();
+            }
+            else
+            {
+                throw new System.Exception("呼ぶ関数がないぜ！");
+            }
+        }
+
+        public void CallFuncArg(string FuncName, object[] args)
+        {
+            Action<object[]> action = actionDicWithArg[FuncName];
+
+            if (action != null)
+            {
+                action.Invoke(args);
+            }
+            else
+            {
+                throw new System.Exception("呼ぶ関数がないぜ！");
+            }
+        }
+
+        public virtual void OnEnter()
+        {
+
+        }
+
+        public virtual void OnExit()
+        {
+
+        }
+
+        public virtual void OnUpdate()
+        {
+
+        }
     }
 }

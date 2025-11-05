@@ -20,7 +20,7 @@ public class RobotPlayerInput : UnitBase,IDamageable,IShockImpact
     [SerializeField]
     private CinemachineVirtualCamera normalCam, TargetCam;
 
-    //レガシーコントローラー
+    //ロボットコントローラー
     public RobotController controller { get; private set; }
     private PlayerUIController uiController;
 
@@ -57,6 +57,7 @@ public class RobotPlayerInput : UnitBase,IDamageable,IShockImpact
 
     //デリゲート類
     public Action<int> OutOfAreaCountDown;
+    public Action moveDelegate;
 
     private DeathHandler deathHandler;
 
@@ -90,7 +91,8 @@ public class RobotPlayerInput : UnitBase,IDamageable,IShockImpact
 
         InputControls testControl = new InputControls();
 
-        controller.onStartBoost += StartBoostEffect;
+        controller.onBoostStart += StartBoostEffect;
+        controller.onAwakeStart += () => AudioManager.instance.PlayAudio(AudioData.audioNameEnum.AwakeStart,false,transform.position);
     }
 
     private void Start()
@@ -416,6 +418,7 @@ public class RobotPlayerInput : UnitBase,IDamageable,IShockImpact
         }
 
         controller.setupControl.LegacySetUp(bodyParts,weaponParts);
+        controller.trailControl.TrailSetUp(bodyParts);
         controller.statusControl.StatusInitalize(bodyParts);
 
         uiController.UIInitlaize(controller.statusControl);
@@ -536,6 +539,8 @@ public class RobotPlayerInput : UnitBase,IDamageable,IShockImpact
     //ダメージを受ける
     void IDamageable.Damage(AttackData attack)
     {
+        if (controller.isDead) return;
+
         //攻撃タイプと耐性を考慮してダメージを決定
         float damage = attack.damage;
 
@@ -746,7 +751,7 @@ public class RobotPlayerInput : UnitBase,IDamageable,IShockImpact
     private void OnJump(InputAction.CallbackContext context)=> controller.OnJump();
 
     //落下ボタンが押されたとき
-    private void OnFall(InputAction.CallbackContext context) => controller.OnFall();
+    private void OnFall(InputAction.CallbackContext context) => controller.StartFall();
 
     //ジャンプボタン長押し（上昇）がされたとき
     private void StartRise(InputAction.CallbackContext context)=> controller.StartRise();

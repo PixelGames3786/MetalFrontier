@@ -17,6 +17,7 @@ MonoBehaviour:
   price: 0
   itemName: "IC-F1 \u982D\u90E8"
   Description: "\u306A\u3057"
+  itemIcon: {fileID: 21300000, guid: 346e3d3fd93629b45a376eec52977579, type: 3}
   Type: 0
   maxModuleSlot: 0
   minModuleSlot: 0

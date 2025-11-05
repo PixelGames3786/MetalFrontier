@@ -107,6 +107,11 @@ public class PartsScrollView : MonoBehaviour
     {
         forcusInfoNum += changeNum;
 
+        if (forcusInfoNum >= 0 && forcusInfoNum < simpleInfos.Count)
+        {
+            AudioManager.instance.PlayAudio(AudioData.audioNameEnum.MenuArrowChange, false);
+        }
+
         forcusInfoNum = Mathf.Clamp(forcusInfoNum, 0, simpleInfos.Count - 1);
 
         SimpleInfoBase newForcus = simpleInfos[forcusInfoNum];

@@ -41,7 +41,7 @@ public class TitleController : MonoBehaviour
         //ƒ[ƒh‚ªI‚í‚é‚Ü‚Å‘Ò‚Â
         if (!SaveDataManager.instance.isLoadComplete) return;
 
-        AudioManager.instance.PlayAudio(AudioData.audioName.TitleConfirm,false);
+        AudioManager.instance.PlayAudio(AudioData.audioNameEnum.TitleConfirm,false);
 
         curtainCanvas.gameObject.SetActive(true);
 

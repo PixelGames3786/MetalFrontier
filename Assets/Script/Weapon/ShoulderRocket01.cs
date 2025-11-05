@@ -76,6 +76,8 @@ public class ShoulderRocket01 : WeaponBase
 
         BulletReload();
 
+        AudioManager.instance.PlayAudio(weaponAudioData, false, transform.position);
+
         //ŽËŒ‚‰Â”\ŠÔŠu‚ð‘Ò‚Â
         isIntervalWait = true;
 

@@ -17,6 +17,7 @@ MonoBehaviour:
   price: 0
   itemName: "VGM-01 \u811A\u90E8"
   Description: "\u306A\u3057"
+  itemIcon: {fileID: 21300000, guid: b4cf3d633d9d89541a666e70dcf7f1da, type: 3}
   Type: 1
   maxModuleSlot: 0
   minModuleSlot: 0

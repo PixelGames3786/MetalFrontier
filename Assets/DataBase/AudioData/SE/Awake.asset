@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae96e2f5216623045b94a5495640acc2, type: 3}
+  m_Name: Awake
+  m_EditorClassIdentifier: 
+  audioName: 7
+  audioVolume: 0.5
+  audioClip: {fileID: 8300000, guid: 5ddd40dd1da474c41b9c6d69231af204, type: 3}
+  is3DAudio: 1

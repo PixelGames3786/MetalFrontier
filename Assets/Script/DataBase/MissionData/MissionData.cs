@@ -27,5 +27,5 @@ public class MissionData : ScriptableObject
     public List<ItemData> clearGetItems=new List<ItemData>();
 
     //クリア時に解放されるミッションのリスト
-    public List<MissionData> clearOpenMisison = new List<MissionData>();
+    public List<MissionData> clearOpenMission = new List<MissionData>();
 }

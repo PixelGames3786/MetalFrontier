@@ -24,7 +24,9 @@ public class DockImageTransition : MonoBehaviour
         CustomGenre,
         CustomPartsType,
         CustomSelectParts,
-        Shop
+        Shop,
+        ShopWeaponScroll,
+        ShopBodyScroll,
     }
 
     public Camera activeCamera1, activeCamera2; //“ñ‚Â‚µ‚©ƒJƒƒ‰‚ğƒIƒ“‚É‚µ‚È‚¢‚Ì‚Å
